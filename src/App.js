@@ -1,25 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import Navbar from "./components/Navbar";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div>
+      {/* Titre principal */}
+      <header style={styles.header}>
+        <h1 style={styles.title}>Esport'IF</h1>
       </header>
+
+      {/* Menu horizontal */}
+      <Navbar />
+
+      {/* Contenu de la page */}
+      <main style={styles.main}>
+        <p>Explorez des données enrichies à partir de DBpedia et Wikidata.</p>
+      </main>
     </div>
   );
-}
+};
+
+// Styles pour le composant
+const styles = {
+  header: {
+    backgroundColor: "#4CAF50",
+    color: "white",
+    padding: "10px 0",
+    textAlign: "center",
+  },
+  title: {
+    margin: 0,
+    fontSize: "2.5rem",
+  },
+  main: {
+    padding: "20px",
+    textAlign: "center",
+  },
+};
 
 export default App;
