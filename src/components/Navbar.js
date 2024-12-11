@@ -35,6 +35,20 @@ const Navbar = () => {
 								À propos
 							</NavLink>
 						</li>
+                        <li>
+							<NavLink
+								to="/jeux"
+								className={({ isActive }) =>
+									`text-white px-4 py-2 ${
+										isActive
+											? "border-b-2 border-white"
+											: "hover:backdrop-blur-sm hover:bg-neutral-600 hover:bg-opacity-50 rounded-lg transition duration-300"
+									}`
+								}
+							>
+								Jeux
+							</NavLink>
+						</li>
 						<li>
 							<NavLink
 								to="/contact"

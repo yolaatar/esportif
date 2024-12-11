@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Jeux from "./pages/Jeux";
 
 const App = () => {
 	return (
@@ -24,11 +25,12 @@ const App = () => {
 				<Navbar />
 
 				{/* Contenu de la page */}
-				<main className="flex-grow">
+				<main className="relative h-screen flex items-center justify-center px-4">
 					<Routes>
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />
 						<Route path="/contact" element={<Contact />} />
+            <Route path="/jeux" element={<Jeux />} />
 					</Routes>
 				</main>
 
