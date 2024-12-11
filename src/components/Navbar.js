@@ -51,7 +51,7 @@ const Navbar = () => {
 						</li>
 						<li>
 							<NavLink
-								to="/contact"
+								to="/tournois"
 								className={({ isActive }) =>
 									`text-white px-4 py-2 ${
 										isActive
@@ -60,7 +60,7 @@ const Navbar = () => {
 									}`
 								}
 							>
-								Contact
+								Tournois
 							</NavLink>
 						</li>
 					</ul>
