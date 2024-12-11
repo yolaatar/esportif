@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { queryGames } from "../utils/dbpediaQueries";
+import { useNavigate } from "react-router-dom";
 
 const Games = () => {
   const [games, setGames] = useState([]); // Stocke les jeux
   const [loading, setLoading] = useState(true); // Gestion du chargement
   const [error, setError] = useState(null); // Gestion des erreurs
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Récupère les jeux au chargement du composant
@@ -31,7 +33,7 @@ const Games = () => {
       <h2 style={{ color: "white", textAlign: "center" }}></h2>
       <div style={styles.gridContainer}>
         {games.map((game, index) => (
-          <div key={index} style={styles.gridItem}>
+          <div key={index} style={styles.gridItem } onClick={() => navigate(`/game/${encodeURIComponent(game.gameURI)}`)}>
             {/* Affiche le logo ou un placeholder */}
             <img
               src={game.logo}

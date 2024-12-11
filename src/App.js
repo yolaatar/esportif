@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Games from "./pages/Games";
+import GameDetails from "./pages/GameDetails";
 import Tournement from "./pages/Tournement";
 
 const App = () => {
@@ -29,8 +30,9 @@ const App = () => {
 					<Routes>
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />
-            <Route path="/games" element={<Games />} />
-            <Route path="/tournement" element={<Tournement />} />
+            			<Route path="/games" element={<Games />} />
+						<Route path="/game/:gameURI" element={<GameDetails />} />
+            			<Route path="/tournement" element={<Tournement />} />
 					</Routes>
 				</main>
 
