@@ -7,6 +7,7 @@ import About from "./pages/About";
 import Games from "./pages/Games";
 import GameDetails from "./pages/GameDetails";
 import Tournement from "./pages/Tournement";
+import Teams from "./pages/Teams.js";
 
 const App = () => {
 	return (
@@ -26,13 +27,14 @@ const App = () => {
 				<Navbar />
 
 				{/* Contenu de la page */}
-				<main className="relative h-screen flex items-center justify-center px-4">
+				<main className="relative flex-grow flex items-center justify-center px-4 py-10">
 					<Routes>
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />
-            			<Route path="/games" element={<Games />} />
+									<Route path="/games" element={<Games />} />
 						<Route path="/game/:gameURI" element={<GameDetails />} />
-            			<Route path="/tournement" element={<Tournement />} />
+									<Route path="/tournement" element={<Tournement />} />
+						<Route path="/teams" element={<Teams />} />
 					</Routes>
 				</main>
 
