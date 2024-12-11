@@ -26,7 +26,7 @@ const App = () => {
 				<Navbar />
 
 				{/* Contenu de la page */}
-				<main className="relative h-screen flex items-center justify-center px-4">
+				<main className="relative flex-grow flex items-center justify-center px-4 py-10">
 					<Routes>
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />

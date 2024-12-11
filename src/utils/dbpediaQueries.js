@@ -1,36 +1,35 @@
 import axios from "axios";
 
 async function fetchWikipediaImage(gameName) {
-  const wikipediaEndpoint = `https://en.wikipedia.org/w/api.php`;
-  const params = {
-    action: "query",
-    titles: gameName,
-    prop: "pageimages",
-    format: "json",
-    origin: "*",
-    pithumbsize: 100,
-  };
+	const wikipediaEndpoint = `https://en.wikipedia.org/w/api.php`;
+	const params = {
+		action: "query",
+		titles: gameName,
+		prop: "pageimages",
+		format: "json",
+		origin: "*",
+		pithumbsize: 100,
+	};
 
-  try {
-    const response = await axios.get(wikipediaEndpoint, { params });
-    const pages = response.data.query.pages;
+	try {
+		const response = await axios.get(wikipediaEndpoint, { params });
+		const pages = response.data.query.pages;
 
-    for (const pageId in pages) {
-      if (pages[pageId].thumbnail) {
-        return pages[pageId].thumbnail.source;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error(`Error fetching Wikipedia image for ${gameName}:`, error);
-    return null;
-  }
+		for (const pageId in pages) {
+			if (pages[pageId].thumbnail) {
+				return pages[pageId].thumbnail.source;
+			}
+		}
+		return null;
+	} catch (error) {
+		console.error(`Error fetching Wikipedia image for ${gameName}:`, error);
+		return null;
+	}
 }
 
-
 export async function queryGames() {
-const sparqlEndpoint = "https://dbpedia.org/sparql";
-const sparqlQuery = `
+	const sparqlEndpoint = "https://dbpedia.org/sparql";
+	const sparqlQuery = `
     PREFIX dbo: <http://dbpedia.org/ontology/>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX dbr: <http://dbpedia.org/resource/>
@@ -46,23 +45,23 @@ const sparqlQuery = `
     }
     GROUP BY ?game ?name ?logo
     ORDER BY DESC(?linkCount)
-    LIMIT 10
+    LIMIT 12
 `;
 
-const params = { query: sparqlQuery, format: "json" };
+	const params = { query: sparqlQuery, format: "json" };
 
-try {
-    const response = await axios.get(sparqlEndpoint, { params });
-    const results = response.data.results.bindings;
+	try {
+		const response = await axios.get(sparqlEndpoint, { params });
+		const results = response.data.results.bindings;
 
-    return results.map((game) => ({
-    name: game.name.value,
-    logo: game.logo?.value || "https://via.placeholder.com/150", // Fallback logo
-    }));
-} catch (error) {
-    console.error("Error fetching esports games:", error);
-    return [];
-}
+		return results.map((game) => ({
+			name: game.name.value,
+			logo: game.logo?.value || "https://via.placeholder.com/150", // Fallback logo
+		}));
+	} catch (error) {
+		console.error("Error fetching esports games:", error);
+		return [];
+	}
 }
 
 export async function queryTournaments() {
@@ -95,48 +94,9 @@ export async function queryTournaments() {
       return results.map((tournament) => ({
         name: tournament.name.value,
         logo: tournament.logo?.value || "https://via.placeholder.com/150", // Fallback logo
-        crosslinkCount: parseInt(tournament.crosslinkCount.value, 10),
       }));
     } catch (error) {
       console.error("Error fetching popular tournaments:", error);
-      return [];
-    }
-  }
-  export async function queryPopularTeams() {
-    const sparqlEndpoint = "https://dbpedia.org/sparql";
-  
-    const sparqlQuery = `
-      PREFIX dbo: <http://dbpedia.org/ontology/>
-      PREFIX dct: <http://purl.org/dc/terms/>
-      PREFIX dbr: <http://dbpedia.org/resource/>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-  
-      SELECT ?team ?name ?logo (COUNT(?link) AS ?crosslinkCount)
-      WHERE {
-        ?team dct:subject dbr:Category:Esports_teams .
-        ?link dbo:wikiPageWikiLink ?team .
-        ?team rdfs:label ?name .
-        OPTIONAL { ?team dbo:thumbnail ?logo . }
-        FILTER (lang(?name) = "en")
-      }
-      GROUP BY ?team ?name ?logo
-      ORDER BY DESC(?crosslinkCount)
-      LIMIT 15
-    `;
-  
-    const params = { query: sparqlQuery, format: "json" };
-  
-    try {
-      const response = await axios.get(sparqlEndpoint, { params });
-      const results = response.data.results.bindings;
-  
-      return results.map((team) => ({
-        name: team.name.value,
-        logo: team.logo?.value || "https://via.placeholder.com/150", // Fallback logo
-        crosslinkCount: parseInt(team.crosslinkCount.value, 10),
-      }));
-    } catch (error) {
-      console.error("Error fetching popular teams:", error);
       return [];
     }
   }
