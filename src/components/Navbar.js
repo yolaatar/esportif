@@ -18,7 +18,7 @@ const Navbar = () => {
 									}`
 								}
 							>
-								Accueil
+								Home
 							</NavLink>
 						</li>
 						<li>
@@ -32,12 +32,12 @@ const Navbar = () => {
 									}`
 								}
 							>
-								À propos
+								About
 							</NavLink>
 						</li>
                         <li>
 							<NavLink
-								to="/jeux"
+								to="/games"
 								className={({ isActive }) =>
 									`text-white px-4 py-2 ${
 										isActive
@@ -46,7 +46,7 @@ const Navbar = () => {
 									}`
 								}
 							>
-								Jeux
+								Games
 							</NavLink>
 						</li>
 						<li>
