@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { queryGames } from "../utils/dbpediaQueries";
 
-const Jeux = () => {
+const Games = () => {
   const [games, setGames] = useState([]); // Stocke les jeux
   const [loading, setLoading] = useState(true); // Gestion du chargement
   const [error, setError] = useState(null); // Gestion des erreurs
@@ -28,11 +28,16 @@ const Jeux = () => {
 
   return (
     <div>
-      <h2 style={{ color: "white", textAlign: "center" }}>Jeux eSport</h2>
+      <h2 style={{ color: "white", textAlign: "center" }}></h2>
       <div style={styles.gridContainer}>
         {games.map((game, index) => (
           <div key={index} style={styles.gridItem}>
-            <div style={styles.placeholder}></div>
+            {/* Affiche le logo ou un placeholder */}
+            <img
+              src={game.logo}
+              alt={`Logo of ${game.name}`}
+              style={styles.logo}
+            />
             <span style={styles.gameName}>{game.name}</span>
           </div>
         ))}
@@ -70,4 +75,4 @@ const styles = {
   },
 };
 
-export default Jeux;
+export default Games;

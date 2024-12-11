@@ -1,5 +1,31 @@
 import axios from "axios";
 
+async function fetchWikipediaImage(gameName) {
+  const wikipediaEndpoint = `https://en.wikipedia.org/w/api.php`;
+  const params = {
+    action: "query",
+    titles: gameName,
+    prop: "pageimages",
+    format: "json",
+    origin: "*",
+    pithumbsize: 100,
+  };
+
+  try {
+    const response = await axios.get(wikipediaEndpoint, { params });
+    const pages = response.data.query.pages;
+
+    for (const pageId in pages) {
+      if (pages[pageId].thumbnail) {
+        return pages[pageId].thumbnail.source;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error fetching Wikipedia image for ${gameName}:`, error);
+    return null;
+  }
+}
 
   
 export async function queryGames() {
@@ -32,7 +58,7 @@ try {
     return Promise.all(
     results.map(async (game) => {
         const name = game.name.value;
-        const logo = game.logo?.value || "https://via.placeholder.com/150";
+        const logo = game.logo?.value || (await fetchWikipediaImage(name)) || "https://via.placeholder.com/100";
         return { name, logo };
     })
     );
