@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
-import Jeux from "./pages/Jeux";
+import Games from "./pages/Games";
 import Tournement from "./pages/Tournement";
 
 const App = () => {
@@ -29,8 +29,7 @@ const App = () => {
 					<Routes>
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />
-						<Route path="/contact" element={<Contact />} />
-            <Route path="/jeux" element={<Jeux />} />
+            <Route path="/games" element={<Games />} />
             <Route path="/tournement" element={<Tournement />} />
 					</Routes>
 				</main>
