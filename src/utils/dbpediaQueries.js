@@ -28,9 +28,9 @@ async function fetchWikipediaImage(gameName) {
     pithumbsize: 500,
   };
 
-  try {
-    const response = await axios.get(wikipediaEndpoint, { params });
-    const pages = response.data.query.pages;
+	try {
+		const response = await axios.get(wikipediaEndpoint, { params });
+		const pages = response.data.query.pages;
 
     for (const pageId in pages) {
       const page = pages[pageId];
@@ -156,20 +156,20 @@ export async function queryTournaments() {
   
     const sparqlQuery = `
       PREFIX dbo: <http://dbpedia.org/ontology/>
-        PREFIX dct: <http://purl.org/dc/terms/>
-        PREFIX dbr: <http://dbpedia.org/resource/>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-        SELECT ?tournament ?name ?logo ?abstract
-        WHERE {
+      PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  
+      SELECT ?tournament ?name ?logo (COUNT(?link) AS ?crosslinkCount)
+      WHERE {
         ?tournament dct:subject dbr:Category:Esports_tournaments .
+        ?link dbo:wikiPageWikiLink ?tournament .
         ?tournament rdfs:label ?name .
-        ?tournament dbo:abstract ?abstract .
         OPTIONAL { ?tournament dbo:thumbnail ?logo . }
-        FILTER (lang(?name) = "en" && lang(?abstract) = "en")
-        }
-        ORDER BY DESC(strlen(?abstract))
-        LIMIT 15
+        FILTER (lang(?name) = "en")
+      }
+      GROUP BY ?tournament ?name ?logo
+      ORDER BY DESC(?crosslinkCount)
+      LIMIT 15
     `;
   
     const params = { query: sparqlQuery, format: "json" };
@@ -183,7 +183,7 @@ export async function queryTournaments() {
         logo: tournament.logo?.value ||  "https://via.placeholder.com/150",
       }));
     } catch (error) {
-      console.error("Error fetching tournaments:", error);
+      console.error("Error fetching popular tournaments:", error);
       return [];
     }
   }
