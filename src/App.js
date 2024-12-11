@@ -1,38 +1,39 @@
-// src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-// Importez d'autres pages selon vos besoins
 
 const App = () => {
 	return (
 		<Router>
-			<div className="min-h-screen flex flex-col">
-				{/* Titre principal */}
-				<header className="bg-gray-800 text-white p-4">
-					<h1 className="text-3xl">Esport'IF</h1>
-				</header>
+			<div className="min-h-screen flex flex-col relative">
+				{/* Image de fond globale */}
+				<img
+					src="/esport-bg.jpg" // Assurez-vous que l'image est dans public/
+					alt="Fond e-Sport"
+					className="absolute inset-0 w-full h-full object-cover -z-10"
+				/>
+
+				{/* Overlay global */}
+				<div className="absolute inset-0 bg-black opacity-60 -z-10"></div>
 
 				{/* Menu horizontal */}
 				<Navbar />
 
 				{/* Contenu de la page */}
-				<main className="flex-grow p-4">
+				<main className="flex-grow">
 					<Routes>
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />
 						<Route path="/contact" element={<Contact />} />
-						{/* Ajoutez d'autres routes ici */}
 					</Routes>
 				</main>
 
-				{/* Footer (optionnel) */}
-				<footer className="bg-gray-800 text-white p-4 text-center">
-					© 2024 Esport'IF. Tous droits réservés.
-				</footer>
+				{/* Footer */}
+				<Footer />
 			</div>
 		</Router>
 	);
