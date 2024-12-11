@@ -24,7 +24,7 @@ const Games = () => {
 	}, []);
 
 	return (
-		<Layout title="Jeux eSport" data={games} loading={loading} error={error} />
+		<Layout title="eSport Games" data={games} loading={loading} error={error} />
 	);
 };
 

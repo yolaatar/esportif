@@ -21,14 +21,14 @@ const Home = () => {
 				type="text"
 				value={searchQuery}
 				onChange={(e) => setSearchQuery(e.target.value)}
-				placeholder="Recherchez vos jeux, équipes ou joueurs préférés..."
-				className="flex-1 px-4 py-3 text-gray-700 focus:outline-none rounded-l-full"
+				placeholder="Search for games, teams or players ..."
+				className="flex-1 px-2 py-2 text-gray-700 focus:outline-none rounded-l-full"
 			/>
 			<button
 				type="submit"
 				className="bg-blue-900 text-white px-6 py-3 rounded-full hover:bg-blue-950 transition-colors duration-300"
 			>
-				Rechercher
+				Search
 			</button>
 		</form>
 	);

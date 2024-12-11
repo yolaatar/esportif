@@ -35,7 +35,7 @@ const Navbar = () => {
 								About
 							</NavLink>
 						</li>
-                        <li>
+						<li>
 							<NavLink
 								to="/games"
 								className={({ isActive }) =>
@@ -60,7 +60,7 @@ const Navbar = () => {
 									}`
 								}
 							>
-								Tournements
+								Tournaments
 							</NavLink>
 						</li>
 					</ul>

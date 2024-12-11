@@ -25,7 +25,7 @@ const Tournement = () => {
 
 	return (
 		<Layout
-			title="Tournois eSport"
+			title="eSport Tournaments"
 			data={tournaments}
 			loading={loading}
 			error={error}
