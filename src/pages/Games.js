@@ -59,12 +59,12 @@ const styles = {
     padding: "10px",
     textAlign: "center",
   },
-  placeholder: {
-    width: "100px",
-    height: "100px",
-    backgroundColor: "gray",
-    margin: "0 auto",
+  logo: {
+    width: "80px", // Largeur réduite
+    height: "80px", // Hauteur réduite
+    margin: "0 auto", // Centre l'image horizontalement
     borderRadius: "5px",
+    objectFit: "cover", // Ajuste l'image pour qu'elle remplisse l'espace
   },
   gameName: {
     marginTop: "10px",
@@ -74,5 +74,6 @@ const styles = {
     fontWeight: "bold",
   },
 };
+
 
 export default Games;
