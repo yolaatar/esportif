@@ -1,41 +1,41 @@
+// src/App.js
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+// Importez d'autres pages selon vos besoins
 
 const App = () => {
-  return (
-    <div>
-      {/* Titre principal */}
-      <header style={styles.header}>
-        <h1 style={styles.title}>Esport'IF</h1>
-      </header>
+	return (
+		<Router>
+			<div className="min-h-screen flex flex-col">
+				{/* Titre principal */}
+				<header className="bg-gray-800 text-white p-4">
+					<h1 className="text-3xl">Esport'IF</h1>
+				</header>
 
-      {/* Menu horizontal */}
-      <Navbar />
+				{/* Menu horizontal */}
+				<Navbar />
 
-      {/* Contenu de la page */}
-      <main style={styles.main}>
-        <p>Explorez des données enrichies à partir de DBpedia et Wikidata.</p>
-      </main>
-    </div>
-  );
-};
+				{/* Contenu de la page */}
+				<main className="flex-grow p-4">
+					<Routes>
+						<Route path="/" element={<Home />} />
+						<Route path="/about" element={<About />} />
+						<Route path="/contact" element={<Contact />} />
+						{/* Ajoutez d'autres routes ici */}
+					</Routes>
+				</main>
 
-// Styles pour le composant
-const styles = {
-  header: {
-    backgroundColor: "#4CAF50",
-    color: "white",
-    padding: "10px 0",
-    textAlign: "center",
-  },
-  title: {
-    margin: 0,
-    fontSize: "2.5rem",
-  },
-  main: {
-    padding: "20px",
-    textAlign: "center",
-  },
+				{/* Footer (optionnel) */}
+				<footer className="bg-gray-800 text-white p-4 text-center">
+					© 2024 Esport'IF. Tous droits réservés.
+				</footer>
+			</div>
+		</Router>
+	);
 };
 
 export default App;
