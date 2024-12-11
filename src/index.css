@@ -2,12 +2,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Styles personnalisés si nécessaire */
-body {
-	@apply bg-gray-100;
-}
-
-header h1 {
-	@apply text-4xl text-center mt-4;
-}
