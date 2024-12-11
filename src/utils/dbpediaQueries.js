@@ -69,22 +69,21 @@ export async function queryTournaments() {
     const sparqlEndpoint = "https://dbpedia.org/sparql";
   
     const sparqlQuery = `
-        PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT ?tournament ?name ?logo (COUNT(?link) AS ?crosslinkCount)
-WHERE {
-  ?tournament dct:subject dbr:Category:Esports_tournaments .
-  ?link dbo:wikiPageWikiLink ?tournament .
-  ?tournament rdfs:label ?name .
-  OPTIONAL { ?tournament dbo:thumbnail ?logo . }
-  FILTER (lang(?name) = "en")
-}
-GROUP BY ?tournament ?name ?logo
-ORDER BY DESC(?crosslinkCount)
-LIMIT 15
-
+      PREFIX dbo: <http://dbpedia.org/ontology/>
+      PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  
+      SELECT ?tournament ?name ?logo (COUNT(?link) AS ?crosslinkCount)
+      WHERE {
+        ?tournament dct:subject dbr:Category:Esports_tournaments .
+        ?link dbo:wikiPageWikiLink ?tournament .
+        ?tournament rdfs:label ?name .
+        OPTIONAL { ?tournament dbo:thumbnail ?logo . }
+        FILTER (lang(?name) = "en")
+      }
+      GROUP BY ?tournament ?name ?logo
+      ORDER BY DESC(?crosslinkCount)
+      LIMIT 15
     `;
   
     const params = { query: sparqlQuery, format: "json" };
@@ -96,9 +95,48 @@ LIMIT 15
       return results.map((tournament) => ({
         name: tournament.name.value,
         logo: tournament.logo?.value || "https://via.placeholder.com/150", // Fallback logo
+        crosslinkCount: parseInt(tournament.crosslinkCount.value, 10),
       }));
     } catch (error) {
       console.error("Error fetching popular tournaments:", error);
+      return [];
+    }
+  }
+  export async function queryPopularTeams() {
+    const sparqlEndpoint = "https://dbpedia.org/sparql";
+  
+    const sparqlQuery = `
+      PREFIX dbo: <http://dbpedia.org/ontology/>
+      PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX dbr: <http://dbpedia.org/resource/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  
+      SELECT ?team ?name ?logo (COUNT(?link) AS ?crosslinkCount)
+      WHERE {
+        ?team dct:subject dbr:Category:Esports_teams .
+        ?link dbo:wikiPageWikiLink ?team .
+        ?team rdfs:label ?name .
+        OPTIONAL { ?team dbo:thumbnail ?logo . }
+        FILTER (lang(?name) = "en")
+      }
+      GROUP BY ?team ?name ?logo
+      ORDER BY DESC(?crosslinkCount)
+      LIMIT 15
+    `;
+  
+    const params = { query: sparqlQuery, format: "json" };
+  
+    try {
+      const response = await axios.get(sparqlEndpoint, { params });
+      const results = response.data.results.bindings;
+  
+      return results.map((team) => ({
+        name: team.name.value,
+        logo: team.logo?.value || "https://via.placeholder.com/150", // Fallback logo
+        crosslinkCount: parseInt(team.crosslinkCount.value, 10),
+      }));
+    } catch (error) {
+      console.error("Error fetching popular teams:", error);
       return [];
     }
   }
