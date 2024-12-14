@@ -118,7 +118,7 @@ export async function queryGames() {
     }
     GROUP BY ?game ?name ?logo
     ORDER BY DESC(?linkCount)
-    LIMIT 10
+    LIMIT 12
   `;
 
   const cleanGameName = (name) => name.replace(/\s*\(.*?\)$/, "").trim();
@@ -196,26 +196,60 @@ export async function queryTournaments() {
     }
   }
 
+
   export async function queryPopularTeams() {
     const sparqlEndpoint = "https://dbpedia.org/sparql";
   
     const sparqlQuery = `
-      PREFIX dbo: <http://dbpedia.org/ontology/>
       PREFIX dct: <http://purl.org/dc/terms/>
-      PREFIX dbr: <http://dbpedia.org/resource/>
+      PREFIX dbo: <http://dbpedia.org/ontology/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-  
-      SELECT ?team ?name ?logo (COUNT(?link) AS ?crosslinkCount)
+
+      SELECT ?name ?team ?logo ?abstract
       WHERE {
-        ?team dct:subject dbr:Category:Esports_teams .
-        ?link dbo:wikiPageWikiLink ?team .
-        ?team rdfs:label ?name .
-        OPTIONAL { ?team dbo:thumbnail ?logo . }
-        FILTER (lang(?name) = "en")
+        {
+          SELECT ?name (SAMPLE(?team) AS ?team) (SAMPLE(?logo) AS ?logo) (SAMPLE(?abstract) AS ?abstract)
+                (CASE 
+                    WHEN STR(?name) = "T1 (esports)" THEN 1
+                    WHEN STR(?name) = "100 Thieves" THEN 2
+                    WHEN STR(?name) = "FaZe Clan" THEN 3
+                    WHEN STR(?name) = "Samsung Galaxy (esports)" THEN 4
+                    WHEN STR(?name) = "Shanghai Dragons" THEN 5
+                    ELSE 6
+                END AS ?priority)
+          WHERE {
+            {
+              ?team dct:subject <http://dbpedia.org/resource/Category:Esports_teams_based_in_China> .
+            }
+            UNION
+            {
+              ?team dct:subject <http://dbpedia.org/resource/Category:Esports_teams_based_in_the_United_States> .
+            }
+            UNION
+            {
+              ?team dct:subject <http://dbpedia.org/resource/Category:Esports_teams_based_in_South_Korea> .
+            }
+            ?team rdfs:label ?name .
+            OPTIONAL { ?team dbo:abstract ?abstract . }
+            OPTIONAL { ?team dbo:thumbnail ?logo . }
+            FILTER (
+              lang(?name) = "en" &&
+              (
+                CONTAINS(LCASE(?name), "esports") ||
+                CONTAINS(LCASE(?name), "team") ||
+                CONTAINS(LCASE(?name), "gaming") ||
+                CONTAINS(LCASE(?name), "clan") ||
+                CONTAINS(LCASE(?name), "thieves") ||
+                CONTAINS(LCASE(?name), "dragons")
+              )
+            )
+          }
+          GROUP BY ?name
+        }
       }
-      GROUP BY ?team ?name ?logo
-      ORDER BY DESC(?crosslinkCount)
-      LIMIT 15
+      ORDER BY ?priority DESC(strlen(STR(?abstract)))
+      LIMIT 12
+
     `;
   
     const params = { query: sparqlQuery, format: "json" };
@@ -227,10 +261,11 @@ export async function queryTournaments() {
       return results.map((team) => ({
         name: team.name.value,
         logo: team.logo?.value || "https://via.placeholder.com/150", // Fallback logo
-        crosslinkCount: parseInt(team.crosslinkCount.value, 10),
+        abstract: team.abstract?.value || "No abstract available", // Handle missing abstracts
       }));
     } catch (error) {
       console.error("Error fetching popular teams:", error);
       return [];
     }
   }
+  
