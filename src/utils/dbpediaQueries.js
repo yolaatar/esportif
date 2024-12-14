@@ -1,11 +1,13 @@
 import axios from "axios";
 
 const isRelevantImage = (imageUrl) => {
-  // Liste de mots-clés à rechercher pour identifier des images pertinentes
-  const relevantKeywords = ["logo", "boxart", "cover", "artwork"];
-  // Liste de mots-clés à éviter
-  const irrelevantKeywords = ["commons"];
-  // const irrelevantKeywords = ["iphone", "android", "screenshot", "device", "interface", "commons"];
+  // Liste de mots-clés à rechercher
+  const relevantKeywords = ["logo", "cover", "boxart", "artwork"];
+  // Liste de mots-clés à exclure
+  const irrelevantKeywords = [
+    "iphone", "android", "device", "interface", "commons",
+    "flag", "screenshot", "icon", "poster", "map"
+  ];
 
   const lowerCaseUrl = imageUrl.toLowerCase();
 
@@ -17,7 +19,22 @@ const isRelevantImage = (imageUrl) => {
 };
 
 
+
+const manualImageOverrides = {
+  "World of Warcraft": "https://upload.wikimedia.org/wikipedia/fr/thumb/e/e3/World_of_Warcraft_Logo.png/220px-World_of_Warcraft_Logo.png",
+  "League of Legends": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/League_of_Legends_2019_vector.svg/langfr-220px-League_of_Legends_2019_vector.svg.png",
+  "Overwatch": "https://upload.wikimedia.org/wikipedia/fr/thumb/d/d9/Overwatch_Logo.png/220px-Overwatch_Logo.png",
+  "Super Smash Bros. Ultimate": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Super_Smash_Bros._Ultimate_logo.svg/langfr-220px-Super_Smash_Bros._Ultimate_logo.svg.png",
+  "Super Smash Bros. for Nintendo 3DS and Wii U": "https://upload.wikimedia.org/wikipedia/fr/8/89/Super_Smash_Bros._for_Nintendo_3DS_-_Wii_U_Logo.png",
+};
+
 async function fetchWikipediaImage(gameName) {
+  // Vérifie si le jeu a une image manuelle
+  if (manualImageOverrides[gameName]) {
+    return manualImageOverrides[gameName];
+  }
+
+  // Logique habituelle
   const wikipediaEndpoint = `https://en.wikipedia.org/w/api.php`;
   const params = {
     action: "query",
@@ -28,9 +45,9 @@ async function fetchWikipediaImage(gameName) {
     pithumbsize: 500,
   };
 
-	try {
-		const response = await axios.get(wikipediaEndpoint, { params });
-		const pages = response.data.query.pages;
+  try {
+    const response = await axios.get(wikipediaEndpoint, { params });
+    const pages = response.data.query.pages;
 
     for (const pageId in pages) {
       const page = pages[pageId];
@@ -39,18 +56,12 @@ async function fetchWikipediaImage(gameName) {
       if (page.thumbnail && page.thumbnail.source) {
         const imageUrl = page.thumbnail.source;
 
-        // Priorise les images avec "logo" dans le chemin
-        if (imageUrl.toLowerCase().includes("logo")) {
-          return imageUrl;
-        }
-
-        // Vérifie si l'image est pertinente
         if (isRelevantImage(imageUrl)) {
           return imageUrl;
         }
       }
 
-      // Sinon, essaye de récupérer la première image de la page
+      // Vérifie les autres images de la page
       if (page.images) {
         for (const image of page.images) {
           const imageUrl = await fetchFullImageUrl(image.title);
@@ -68,6 +79,7 @@ async function fetchWikipediaImage(gameName) {
     return null;
   }
 }
+
 
 
 // Récupère l'URL complète d'une image à partir de son titre
