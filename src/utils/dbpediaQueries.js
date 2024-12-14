@@ -172,8 +172,7 @@ export async function queryTournaments() {
           CONTAINS(LCASE(?name), "cup") ||
           CONTAINS(LCASE(?name), "champions") ||
           CONTAINS(LCASE(?name), "tournament") ||
-          CONTAINS(LCASE(?name), "invitational")||
-          CONTAINS(LCASE(?name), "series") 
+          CONTAINS(LCASE(?name), "invitational")
         ))
       }
       ORDER BY DESC(strlen(?abstract))
