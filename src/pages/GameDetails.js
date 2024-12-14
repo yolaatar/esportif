@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { queryGameDetails } from "../utils/dbpediaQueries";
+import { queryGameDetailsByName } from "../utils/dbpediaQueries";
 
 const GameDetails = () => {
-  const { gameURI } = useParams(); // Get gameURI from URL
+  const { name } = useParams(); // Get name from URL
   const [gameDetails, setGameDetails] = useState(null); // Store game details
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error state
@@ -13,7 +13,7 @@ const GameDetails = () => {
     const fetchDetails = async () => {
       try {
         setLoading(true);
-        const details = await queryGameDetails(decodeURIComponent(gameURI));
+        const details = await queryGameDetailsByName(decodeURIComponent(name));
         setGameDetails(details);
       } catch (err) {
         setError("Erreur lors de la récupération des détails du jeu.");
@@ -23,7 +23,7 @@ const GameDetails = () => {
     };
 
     fetchDetails();
-  }, [gameURI]);
+  }, [name]);
 
   if (loading) return <p style={{ color: "white" }}>Chargement des détails...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;

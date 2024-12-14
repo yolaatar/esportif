@@ -138,11 +138,11 @@ export async function queryGames() {
         }
 
         const name = cleanGameName(game.name.value);
-    gameURI: game.game?.value,
+    
         const logo =
           (await fetchWikipediaImage(name)) || game.logo?.value || "https://via.placeholder.com/150";
 
-        return { name, logo };
+        return { name, logo};
       })
     );
   } catch (error) {
@@ -283,3 +283,131 @@ export async function queryTournaments() {
       return null;
     }
   }
+
+  export async function queryGameDetailsByName(gameName) {
+    const sparqlEndpoint = "https://dbpedia.org/sparql";
+    const escapedGameName = gameName.replace(/[\(\)]/g, '\\$&'); // Escape parentheses
+  
+    const sparqlQuery = `
+      PREFIX dbp: <http://dbpedia.org/property/>
+      PREFIX dbo: <http://dbpedia.org/ontology/>
+      PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  
+      SELECT ?name
+             (COALESCE(MIN(?dboReleaseDate), MIN(?dbpReleaseDate)) AS ?releaseDate)
+             (GROUP_CONCAT(DISTINCT ?publisherName; SEPARATOR=", ") AS ?publishers)
+             (GROUP_CONCAT(DISTINCT ?developerName; SEPARATOR=", ") AS ?developers)
+             (GROUP_CONCAT(DISTINCT ?dboGenreName; SEPARATOR=", ") AS ?dboGenres)
+             (GROUP_CONCAT(DISTINCT ?dbpGenreName; SEPARATOR=", ") AS ?dbpGenres)
+             (GROUP_CONCAT(DISTINCT ?dboPlatformName; SEPARATOR=", ") AS ?dboPlatforms)
+             (GROUP_CONCAT(DISTINCT ?dbpPlatformName; SEPARATOR=", ") AS ?dbpPlatforms)
+             ?abstract
+      WHERE {
+        ?game rdfs:label ?name ;
+              dct:subject dbr:Category:Esports_games .
+  
+        FILTER (
+          (str(?name) = "${gameName}"@en || regex(str(?name), "^${escapedGameName}( \\\\(video game series\\\\))?$", "i"))
+          && lang(?name) = "en"
+        )
+  
+        OPTIONAL { ?game dbo:releaseDate ?dboReleaseDate . }
+        OPTIONAL { ?game dbp:firstReleaseDate ?dbpReleaseDate . }
+  
+        OPTIONAL {
+          ?game dbo:publisher ?publisher .
+          ?publisher rdfs:label ?publisherName .
+          FILTER(lang(?publisherName) = "en")
+        }
+        OPTIONAL {
+          ?game dbp:publisher ?dbpPublisher .
+          ?dbpPublisher rdfs:label ?publisherName .
+          FILTER(lang(?publisherName) = "en")
+        }
+  
+        OPTIONAL {
+          ?game dbo:developer ?developer .
+          ?developer rdfs:label ?developerName .
+          FILTER(lang(?developerName) = "en")
+        }
+        OPTIONAL {
+          ?game dbp:developer ?dbpDeveloper .
+          ?dbpDeveloper rdfs:label ?developerName .
+          FILTER(lang(?developerName) = "en")
+        }
+  
+        OPTIONAL {
+          ?game dbo:genre ?dboGenre .
+          ?dboGenre rdfs:label ?dboGenreName .
+          FILTER(lang(?dboGenreName) = "en")
+        }
+        OPTIONAL {
+          ?game dbp:genre ?dbpGenre .
+          ?dbpGenre rdfs:label ?dbpGenreName .
+          FILTER(lang(?dbpGenreName) = "en")
+        }
+  
+        OPTIONAL {
+          ?game dbo:computingPlatform ?dboPlatform .
+          ?dboPlatform rdfs:label ?dboPlatformName .
+          FILTER(lang(?dboPlatformName) = "en")
+        }
+        OPTIONAL {
+          ?game dbp:platforms ?dbpPlatform .
+          ?dbpPlatform rdfs:label ?dbpPlatformName .
+          FILTER(lang(?dbpPlatformName) = "en")
+        }
+  
+        OPTIONAL { ?game dbo:abstract ?abstract . FILTER(lang(?abstract) = "en") }
+      }
+      GROUP BY ?name ?abstract
+    `;
+  
+    try {
+      console.log("Generated SPARQL Query:", sparqlQuery); // Log raw query
+  
+      // Encode only the query parameter for safe transmission
+      const response = await axios.get(sparqlEndpoint, {
+        params: { query: sparqlQuery, format: "json" },
+      });
+  
+      console.log("SPARQL Response:", response.data); // Log response data
+  
+      // Extract the result
+      const result = response.data.results.bindings[0];
+      if (!result) {
+        throw new Error(`No data found for game: ${gameName}`);
+      }
+  
+      // Handle optional fields with defaults
+      const genres = [
+        ...(result.dboGenres?.value?.split(", ") || []),
+        ...(result.dbpGenres?.value?.split(", ") || []),
+      ];
+      const uniqueGenres = [...new Set(genres)];
+  
+      const platforms = [
+        ...(result.dboPlatforms?.value?.split(", ") || []),
+        ...(result.dbpPlatforms?.value?.split(", ") || []),
+      ];
+      const uniquePlatforms = [...new Set(platforms)];
+  
+      return {
+        name: result.name?.value || "Unknown",
+        releaseDate: result.releaseDate?.value || "Unknown",
+        publishers: result.publishers?.value?.split(", ") || [],
+        developers: result.developers?.value?.split(", ") || [],
+        genres: uniqueGenres,
+        platforms: uniquePlatforms,
+        abstract: result.abstract?.value || "No abstract available.",
+      };
+    } catch (error) {
+      console.error(`Error fetching game details for "${gameName}":`, error);
+      return null;
+    }
+  }
+  
+
+
+  
