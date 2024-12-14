@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const Layout = ({ title, data, loading, error }) => {
+const Layout = ({ title, data, loading, error, onClick}) => {
 	if (loading)
 		return <p className="text-white text-center mt-10">Chargement...</p>;
 	if (error) return <p className="text-red-500 text-center mt-10">{error}</p>;
@@ -22,7 +22,8 @@ const Layout = ({ title, data, loading, error }) => {
 							delay: index * 0.2, // Décalage pour chaque carte
 							ease: "easeOut",
 						}}
-						className="bg-gray-800 rounded-lg p-6 flex flex-col items-center shadow-lg hover:bg-gray-700 transition-transform duration-300 hover:scale-105"
+						className="bg-gray-800 rounded-lg p-6 flex flex-col items-center shadow-lg hover:bg-gray-700 transition-transform duration-300 hover:scale-105 cursor-pointer"
+						onClick={() => onClick(item)}
 					>
 						{item.logo && (
 							<img
