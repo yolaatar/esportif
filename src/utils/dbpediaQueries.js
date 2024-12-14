@@ -26,6 +26,16 @@ const manualImageOverrides = {
   "Overwatch": "https://upload.wikimedia.org/wikipedia/fr/thumb/d/d9/Overwatch_Logo.png/220px-Overwatch_Logo.png",
   "Super Smash Bros. Ultimate": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Super_Smash_Bros._Ultimate_logo.svg/langfr-220px-Super_Smash_Bros._Ultimate_logo.svg.png",
   "Super Smash Bros. for Nintendo 3DS and Wii U": "https://upload.wikimedia.org/wikipedia/fr/8/89/Super_Smash_Bros._for_Nintendo_3DS_-_Wii_U_Logo.png",
+  "Super Smash Bros. Melee": "https://upload.wikimedia.org/wikipedia/fr/7/70/Super_Smash_Bros._Melee_Logo.png",
+  "Pacific Championship Series": "https://upload.wikimedia.org/wikipedia/en/5/5f/Pacific_Championship_Series_logo.png",
+  "Rocket League Championship Series": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/RLCS_logo.svg/250px-RLCS_logo.svg.png",
+  "Overwatch League": "https://upload.wikimedia.org/wikipedia/fr/7/77/Overwatch_League_Logo.png",
+  "T1" : "https://upload.wikimedia.org/wikipedia/fr/thumb/f/f9/T1_logo.svg/langfr-1280px-T1_logo.svg.png",
+  "Samsung Galaxy": "https://upload.wikimedia.org/wikipedia/en/c/c4/Samsung_Galaxy_Pro-Game_Team.png",
+  "Rogue" : "https://upload.wikimedia.org/wikipedia/fr/thumb/7/7c/Rogue_Primary_Logo_v1.png/1280px-Rogue_Primary_Logo_v1.png",
+  "Final Boss" : "https://upload.wikimedia.org/wikipedia/en/a/a9/Final_Boss_logo.png",
+  "Team 3D" : "https://upload.wikimedia.org/wikipedia/commons/3/38/Team_3D_logo.png"
+
 };
 
 async function fetchWikipediaImage(gameName) {
@@ -150,11 +160,11 @@ export async function queryGames() {
         }
 
         const name = cleanGameName(game.name.value);
-    
+
         const logo =
           (await fetchWikipediaImage(name)) || game.logo?.value || "https://via.placeholder.com/150";
 
-        return { name, logo};
+        return { name, logo };
       })
     );
   } catch (error) {
@@ -165,54 +175,84 @@ export async function queryGames() {
 
 
 export async function queryTournaments() {
-    const sparqlEndpoint = "https://dbpedia.org/sparql";
-  
-    const sparqlQuery = `
-      PREFIX dbo: <http://dbpedia.org/ontology/>
-      PREFIX dbr: <http://dbpedia.org/resource/>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  const sparqlEndpoint = "https://dbpedia.org/sparql";
 
-      SELECT ?tournament ?name ?logo ?abstract
-      WHERE {
-        dbr:List_of_esports_leagues_and_tournaments dbo:wikiPageWikiLink ?tournament .
-        ?tournament rdfs:label ?name .
-        ?tournament dbo:abstract ?abstract .
-        OPTIONAL { ?tournament dbo:thumbnail ?logo . }
-        FILTER (lang(?name) = "en" && lang(?abstract) = "en" && (
-          CONTAINS(LCASE(?name), "world cup") ||
-          CONTAINS(LCASE(?name), "championship") ||
-          CONTAINS(LCASE(?name), "cup") ||
-          CONTAINS(LCASE(?name), "champions") ||
-          CONTAINS(LCASE(?name), "tournament") ||
-          CONTAINS(LCASE(?name), "invitational")
-        ))
-      }
-      ORDER BY DESC(strlen(?abstract))
-      LIMIT 12
+  const sparqlQuery = `
+      PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?tournament ?name ?logo ?abstract
+WHERE {
+  dbr:List_of_esports_leagues_and_tournaments dbo:wikiPageWikiLink ?tournament .
+  ?tournament rdfs:label ?name .
+  ?tournament dbo:abstract ?abstract .
+  OPTIONAL { ?tournament dbo:thumbnail ?logo . }
+  FILTER (
+    lang(?name) = "en" && 
+    lang(?abstract) = "en" 
+  )
+  FILTER (
+    CONTAINS(LCASE(?name), "world cup") ||
+    CONTAINS(LCASE(?name), "championship") ||
+    CONTAINS(LCASE(?name), "cup") ||
+    CONTAINS(LCASE(?name), "champions") ||
+    CONTAINS(LCASE(?name), "tournament") ||
+    CONTAINS(LCASE(?name), "invitational") ||
+    CONTAINS(LCASE(?name), "league") 
+  )
+  
+}
+ORDER BY DESC(strlen(?abstract))
+LIMIT 20
+
 
     `;
-  
-    const params = { query: sparqlQuery, format: "json" };
-  
-    try {
-      const response = await axios.get(sparqlEndpoint, { params });
-      const results = response.data.results.bindings;
-  
-      return results.map((tournament) => ({
-        name: tournament.name.value,
-        logo: tournament.logo?.value ||  "https://via.placeholder.com/150",
-      }));
-    } catch (error) {
-      console.error("Error fetching popular tournaments:", error);
-      return [];
-    }
+
+  const params = { query: sparqlQuery, format: "json" };
+
+  try {
+    const response = await axios.get(sparqlEndpoint, { params });
+    const results = response.data.results.bindings;
+
+    const excludedTournaments = [
+      "mobile legends: bang bang southeast asia cup",
+      "major league gaming",
+      "league of legends", 
+      "rocket league",
+      "league of legends rift rivals",
+      "cyberathlete professional league",
+      "professional gamers league"
+
+    ];
+    
+    const filteredResults = results.filter(
+      (tournament) => !excludedTournaments.includes(tournament.name.value.toLowerCase())
+    );
+    const finalResults = filteredResults.slice(0, 12);
+
+    return Promise.all(
+      finalResults.map(async (tournament) => {
+        if (!tournament.name || !tournament.name.value) {
+          return { name: "Unknown Tournament", logo: "https://via.placeholder.com/150" };
+        }
+        const name = tournament.name.value;
+        const logo = (await fetchWikipediaImage(name)) || tournament.logo?.value || "https://via.placeholder.com/150";
+
+        return { name, logo };
+      })
+    );
+  } catch (error) {
+    console.error("Error fetching popular tournaments:", error);
+    return [];
   }
+}
 
 
-  export async function queryPopularTeams() {
-    const sparqlEndpoint = "https://dbpedia.org/sparql";
-  
-    const sparqlQuery = `
+export async function queryPopularTeams() {
+  const sparqlEndpoint = "https://dbpedia.org/sparql";
+
+  const sparqlQuery = `
       PREFIX dct: <http://purl.org/dc/terms/>
       PREFIX dbo: <http://dbpedia.org/ontology/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -253,6 +293,7 @@ export async function queryTournaments() {
                 CONTAINS(LCASE(?name), "clan") ||
                 CONTAINS(LCASE(?name), "thieves") ||
                 CONTAINS(LCASE(?name), "dragons")
+                
               )
             )
           }
@@ -263,27 +304,35 @@ export async function queryTournaments() {
       LIMIT 12
 
     `;
-  
-    const params = { query: sparqlQuery, format: "json" };
-  
-    try {
-      const response = await axios.get(sparqlEndpoint, { params });
-      const results = response.data.results.bindings;
-  
-      return results.map((team) => ({
-        name: team.name.value,
-        logo: team.logo?.value || "https://via.placeholder.com/150", // Fallback logo
-        abstract: team.abstract?.value || "No abstract available", // Handle missing abstracts
-      }));
-    } catch (error) {
-      console.error("Error fetching popular teams:", error);
-      return [];
-    }
-  }
 
-  export async function queryGameDetails(gameURI) {
-    const sparqlEndpoint = "https://dbpedia.org/sparql";
-    const sparqlQuery = `
+  const params = { query: sparqlQuery, format: "json" };
+
+  const cleanTeamName = (name) => name.replace(/\s*\(.*?\)$/, "").trim();
+
+  try {
+    const response = await axios.get(sparqlEndpoint, { params });
+    const results = response.data.results.bindings;
+
+    return Promise.all(
+      results.map(async (team) => {
+        if (!team.name || !team.name.value) {
+          return { name: "Unknown Team", logo: "https://via.placeholder.com/150" };
+        }
+        const name = cleanTeamName(team.name.value);
+        const logo = (await fetchWikipediaImage(name)) || team.logo?.value || "https://via.placeholder.com/150";
+
+        return { name, logo };
+      })
+    );
+  } catch (error) {
+    console.error("Error fetching popular teams:", error);
+    return [];
+  }
+}
+
+export async function queryGameDetails(gameURI) {
+  const sparqlEndpoint = "https://dbpedia.org/sparql";
+  const sparqlQuery = `
       PREFIX dbo: <http://dbpedia.org/ontology/>
       PREFIX dbr: <http://dbpedia.org/resource/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -314,34 +363,34 @@ export async function queryTournaments() {
       }
       GROUP BY ?name ?abstract
     `;
-  
-    const params = { query: sparqlQuery, format: "json" };
-  
-    try {
-      const response = await axios.get(sparqlEndpoint, { params });
-      const result = response.data.results.bindings[0]; // Expecting one result
-  
-      // Return formatted game details
-      return {
-        name: result.name?.value,
-        releaseDate: result.oldestReleaseDate?.value,
-        publishers: result.publishers?.value.split(", "),
-        developers: result.developers?.value.split(", "),
-        genres: result.genres?.value.split(", "),
-        platforms: result.platforms?.value.split(", "),
-        abstract: result.abstract?.value,
-      };
-    } catch (error) {
-      console.error("Error fetching game details:", error);
-      return null;
-    }
-  }
 
-  export async function queryGameDetailsByName(gameName) {
-    const sparqlEndpoint = "https://dbpedia.org/sparql";
-    const escapedGameName = gameName.replace(/[\(\)]/g, '\\$&'); // Escape parentheses
-  
-    const sparqlQuery = `
+  const params = { query: sparqlQuery, format: "json" };
+
+  try {
+    const response = await axios.get(sparqlEndpoint, { params });
+    const result = response.data.results.bindings[0]; // Expecting one result
+
+    // Return formatted game details
+    return {
+      name: result.name?.value,
+      releaseDate: result.oldestReleaseDate?.value,
+      publishers: result.publishers?.value.split(", "),
+      developers: result.developers?.value.split(", "),
+      genres: result.genres?.value.split(", "),
+      platforms: result.platforms?.value.split(", "),
+      abstract: result.abstract?.value,
+    };
+  } catch (error) {
+    console.error("Error fetching game details:", error);
+    return null;
+  }
+}
+
+export async function queryGameDetailsByName(gameName) {
+  const sparqlEndpoint = "https://dbpedia.org/sparql";
+  const escapedGameName = gameName.replace(/[\(\)]/g, '\\$&'); // Escape parentheses
+
+  const sparqlQuery = `
       PREFIX dbp: <http://dbpedia.org/property/>
       PREFIX dbo: <http://dbpedia.org/ontology/>
       PREFIX dct: <http://purl.org/dc/terms/>
@@ -416,51 +465,50 @@ export async function queryTournaments() {
       }
       GROUP BY ?name ?abstract
     `;
-  
-    try {
-      console.log("Generated SPARQL Query:", sparqlQuery); // Log raw query
-  
-      // Encode only the query parameter for safe transmission
-      const response = await axios.get(sparqlEndpoint, {
-        params: { query: sparqlQuery, format: "json" },
-      });
-  
-      console.log("SPARQL Response:", response.data); // Log response data
-  
-      // Extract the result
-      const result = response.data.results.bindings[0];
-      if (!result) {
-        throw new Error(`No data found for game: ${gameName}`);
-      }
-  
-      // Handle optional fields with defaults
-      const genres = [
-        ...(result.dboGenres?.value?.split(", ") || []),
-        ...(result.dbpGenres?.value?.split(", ") || []),
-      ];
-      const uniqueGenres = [...new Set(genres)];
-  
-      const platforms = [
-        ...(result.dboPlatforms?.value?.split(", ") || []),
-        ...(result.dbpPlatforms?.value?.split(", ") || []),
-      ];
-      const uniquePlatforms = [...new Set(platforms)];
-  
-      return {
-        name: result.name?.value || "Unknown",
-        releaseDate: result.releaseDate?.value || "Unknown",
-        publishers: result.publishers?.value?.split(", ") || [],
-        developers: result.developers?.value?.split(", ") || [],
-        genres: uniqueGenres,
-        platforms: uniquePlatforms,
-        abstract: result.abstract?.value || "No abstract available.",
-      };
-    } catch (error) {
-      console.error(`Error fetching game details for "${gameName}":`, error);
-      return null;
+
+  try {
+    console.log("Generated SPARQL Query:", sparqlQuery); // Log raw query
+
+    // Encode only the query parameter for safe transmission
+    const response = await axios.get(sparqlEndpoint, {
+      params: { query: sparqlQuery, format: "json" },
+    });
+
+    console.log("SPARQL Response:", response.data); // Log response data
+
+    // Extract the result
+    const result = response.data.results.bindings[0];
+    if (!result) {
+      throw new Error(`No data found for game: ${gameName}`);
     }
+
+    // Handle optional fields with defaults
+    const genres = [
+      ...(result.dboGenres?.value?.split(", ") || []),
+      ...(result.dbpGenres?.value?.split(", ") || []),
+    ];
+    const uniqueGenres = [...new Set(genres)];
+
+    const platforms = [
+      ...(result.dboPlatforms?.value?.split(", ") || []),
+      ...(result.dbpPlatforms?.value?.split(", ") || []),
+    ];
+    const uniquePlatforms = [...new Set(platforms)];
+
+    return {
+      name: result.name?.value || "Unknown",
+      releaseDate: result.releaseDate?.value || "Unknown",
+      publishers: result.publishers?.value?.split(", ") || [],
+      developers: result.developers?.value?.split(", ") || [],
+      genres: uniqueGenres,
+      platforms: uniquePlatforms,
+      abstract: result.abstract?.value || "No abstract available.",
+    };
+  } catch (error) {
+    console.error(`Error fetching game details for "${gameName}":`, error);
+    return null;
   }
-  
+}
 
 
-  
+
