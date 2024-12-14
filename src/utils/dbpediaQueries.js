@@ -157,20 +157,28 @@ export async function queryTournaments() {
   
     const sparqlQuery = `
       PREFIX dbo: <http://dbpedia.org/ontology/>
-      PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX dbr: <http://dbpedia.org/resource/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-  
-      SELECT ?tournament ?name ?logo (COUNT(?link) AS ?crosslinkCount)
+
+      SELECT ?tournament ?name ?logo ?abstract
       WHERE {
-        ?tournament dct:subject dbr:Category:Esports_tournaments .
-        ?link dbo:wikiPageWikiLink ?tournament .
+        dbr:List_of_esports_leagues_and_tournaments dbo:wikiPageWikiLink ?tournament .
         ?tournament rdfs:label ?name .
+        ?tournament dbo:abstract ?abstract .
         OPTIONAL { ?tournament dbo:thumbnail ?logo . }
-        FILTER (lang(?name) = "en")
+        FILTER (lang(?name) = "en" && lang(?abstract) = "en" && (
+          CONTAINS(LCASE(?name), "world cup") ||
+          CONTAINS(LCASE(?name), "championship") ||
+          CONTAINS(LCASE(?name), "cup") ||
+          CONTAINS(LCASE(?name), "champions") ||
+          CONTAINS(LCASE(?name), "tournament") ||
+          CONTAINS(LCASE(?name), "invitational")||
+          CONTAINS(LCASE(?name), "series") 
+        ))
       }
-      GROUP BY ?tournament ?name ?logo
-      ORDER BY DESC(?crosslinkCount)
-      LIMIT 15
+      ORDER BY DESC(strlen(?abstract))
+      LIMIT 12
+
     `;
   
     const params = { query: sparqlQuery, format: "json" };
