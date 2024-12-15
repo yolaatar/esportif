@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { queryGames } from "../utils/dbpediaQueries";
-import Layout from "./Layout";
+import LayoutGrid from "./LayoutGrid";
 import { useNavigate } from "react-router-dom";
 
 const Games = () => {
 	const [games, setGames] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-  	const navigate = useNavigate();
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		const fetchGames = async () => {
@@ -34,9 +34,14 @@ const Games = () => {
 	};
 
 	return (
-		<Layout title="eSport Games" data={games} loading={loading} error={error} onClick={handleGameClick} />
+		<LayoutGrid
+			title="eSport Games"
+			data={games}
+			loading={loading}
+			error={error}
+			onClick={handleGameClick}
+		/>
 	);
 };
-
 
 export default Games;

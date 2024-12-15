@@ -1,9 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { ClipLoader } from "react-spinners";
 
-const Layout = ({ title, data, loading, error, onClick}) => {
+const LayoutGrid = ({ title, data, loading, error, onClick }) => {
 	if (loading)
-		return <p className="text-white text-center mt-10">Chargement...</p>;
+		return (
+			<div className="flex justify-center items-center min-h-[80vh]">
+				<ClipLoader color="#ffffff" size={50} />
+			</div>
+		);
+
 	if (error) return <p className="text-red-500 text-center mt-10">{error}</p>;
 
 	return (
@@ -42,4 +48,4 @@ const Layout = ({ title, data, loading, error, onClick}) => {
 	);
 };
 
-export default Layout;
+export default LayoutGrid;

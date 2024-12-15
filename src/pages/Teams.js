@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { queryPopularTeams } from "../utils/dbpediaQueries";
-import Layout from "./Layout";
+import LayoutGrid from "./LayoutGrid";
 
 const Teams = () => {
 	const [teams, setTeams] = useState([]);
@@ -24,7 +24,12 @@ const Teams = () => {
 	}, []);
 
 	return (
-		<Layout title="eSport Teams" data={teams} loading={loading} error={error} />
+		<LayoutGrid
+			title="eSport Teams"
+			data={teams}
+			loading={loading}
+			error={error}
+		/>
 	);
 };
 
