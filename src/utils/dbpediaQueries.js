@@ -222,14 +222,16 @@ LIMIT 20
       "rocket league",
       "league of legends rift rivals",
       "cyberathlete professional league",
-      "professional gamers league"
+      "professional gamers league",
+      "2016 league of legends world championship",
+      "rocket league championship series"
 
     ];
     
     const filteredResults = results.filter(
       (tournament) => !excludedTournaments.includes(tournament.name.value.toLowerCase())
     );
-    const finalResults = filteredResults.slice(0, 12);
+    const finalResults = filteredResults.slice(0, 9);
 
     return Promise.all(
       finalResults.map(async (tournament) => {
@@ -530,7 +532,7 @@ export async function queryTournamentDetailsByName(tournamentName) {
            (GROUP_CONCAT(DISTINCT COALESCE(?domesticCupLabel, STR(?domesticCup)); SEPARATOR=", ") AS ?domesticCups)
            (GROUP_CONCAT(DISTINCT COALESCE(?relatedCompLabel, STR(?relatedComp)); SEPARATOR=", ") AS ?relatedComps)
            (GROUP_CONCAT(DISTINCT COALESCE(?reverseRelatedCompLabel, STR(?reverseRelatedComp)); SEPARATOR=", ") AS ?reverseRelatedComps)
-           (GROUP_CONCAT(DISTINCT ?country; SEPARATOR=", ") AS ?countries)
+           (GROUP_CONCAT(DISTINCT COALESCE(?countryLabel, STR(?country)); SEPARATOR=", ") AS ?countries)
            ?website ?abstract
     WHERE {
       dbr:List_of_esports_leagues_and_tournaments dbo:wikiPageWikiLink ?tournament .
@@ -604,7 +606,13 @@ export async function queryTournamentDetailsByName(tournamentName) {
       }
 
       # Retrieve countries
-      OPTIONAL { ?tournament dbp:country ?country . }
+      OPTIONAL { 
+        ?tournament dbp:country ?country .
+        OPTIONAL { 
+          ?country rdfs:label ?countryLabel .
+          FILTER(lang(?countryLabel) = "en")
+        }
+      }
 
       # Retrieve website
       OPTIONAL { ?tournament dbp:website ?website . }
