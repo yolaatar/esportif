@@ -388,7 +388,7 @@ export async function queryGameDetails(gameURI) {
 
 export async function queryGameDetailsByName(gameName) {
   const sparqlEndpoint = "https://dbpedia.org/sparql";
-  const escapedGameName = gameName.replace(/[\(\)]/g, '\\$&'); // Escape parentheses
+  const escapedGameName = gameName.replace(/[()]/g, '\\$&'); // Escape parentheses
 
   const sparqlQuery = `
       PREFIX dbp: <http://dbpedia.org/property/>
@@ -509,6 +509,139 @@ export async function queryGameDetailsByName(gameName) {
     return null;
   }
 }
+
+export async function queryTournamentDetailsByName(tournamentName) {
+  const sparqlEndpoint = "https://dbpedia.org/sparql";
+  const escapedTournamentName = tournamentName.replace(/"/g, '\\"'); // Escape quotes for SPARQL
+
+  const sparqlQuery = `
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+    PREFIX dbp: <http://dbpedia.org/property/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX dbr: <http://dbpedia.org/resource/>
+
+    SELECT ?name 
+           ?game 
+           (GROUP_CONCAT(DISTINCT COALESCE(?mostChampLabel, STR(?mostChamp)); SEPARATOR=", ") AS ?mostChamps)
+           (GROUP_CONCAT(DISTINCT COALESCE(?mostSuccessfulClubLabel, STR(?mostSuccessfulClub)); SEPARATOR=", ") AS ?mostSuccessfulClubs)
+           (MIN(?foundingYear) AS ?oldestFoundingYear)
+           (GROUP_CONCAT(DISTINCT ?venue; SEPARATOR=", ") AS ?venues)
+           ?motto 
+           (GROUP_CONCAT(DISTINCT COALESCE(?domesticCupLabel, STR(?domesticCup)); SEPARATOR=", ") AS ?domesticCups)
+           (GROUP_CONCAT(DISTINCT COALESCE(?relatedCompLabel, STR(?relatedComp)); SEPARATOR=", ") AS ?relatedComps)
+           (GROUP_CONCAT(DISTINCT COALESCE(?reverseRelatedCompLabel, STR(?reverseRelatedComp)); SEPARATOR=", ") AS ?reverseRelatedComps)
+           (GROUP_CONCAT(DISTINCT ?country; SEPARATOR=", ") AS ?countries)
+           ?website ?abstract
+    WHERE {
+      dbr:List_of_esports_leagues_and_tournaments dbo:wikiPageWikiLink ?tournament .
+      ?tournament rdfs:label ?name .
+
+      # Retrieve the associated game
+      OPTIONAL { ?tournament dbp:game ?game . }
+
+      # Handle most champions with labels
+      OPTIONAL { 
+        ?tournament dbp:mostChamps ?mostChamp .
+        OPTIONAL { 
+          ?mostChamp rdfs:label ?mostChampLabel .
+          FILTER(lang(?mostChampLabel) = "en")
+        }
+      }
+
+      # Handle most successful clubs with labels
+      OPTIONAL { 
+        ?tournament dbp:mostSuccessfulClub ?mostSuccessfulClub .
+        OPTIONAL { 
+          ?mostSuccessfulClub rdfs:label ?mostSuccessfulClubLabel .
+          FILTER(lang(?mostSuccessfulClubLabel) = "en")
+        }
+      }
+
+      # Retrieve founding year (oldest if multiple exist)
+      OPTIONAL { ?tournament dbo:foundingYear ?foundingYear . }
+
+      # Retrieve venues
+      OPTIONAL { ?tournament dbp:venue ?venue . }
+
+      # Retrieve motto
+      OPTIONAL { ?tournament dbp:motto ?motto . }
+
+      # Handle domestic cups with labels
+      OPTIONAL { 
+        ?tournament dbp:domesticCup ?domesticCup .
+        OPTIONAL { 
+          ?domesticCup rdfs:label ?domesticCupLabel .
+          FILTER(lang(?domesticCupLabel) = "en")
+        }
+      }
+
+      # Retrieve related competitions
+      OPTIONAL { 
+        ?tournament dbp:relatedComps ?relatedComp .
+        OPTIONAL { 
+          ?relatedComp rdfs:label ?relatedCompLabel .
+          FILTER(lang(?relatedCompLabel) = "en")
+        }
+      }
+
+      # Retrieve reverse related competitions
+      OPTIONAL { 
+        ?reverseRelatedComp dbp:relatedComps ?tournament .
+        OPTIONAL { 
+          ?reverseRelatedComp rdfs:label ?reverseRelatedCompLabel .
+          FILTER(lang(?reverseRelatedCompLabel) = "en")
+        }
+      }
+
+      # Retrieve countries
+      OPTIONAL { ?tournament dbp:country ?country . }
+
+      # Retrieve website
+      OPTIONAL { ?tournament dbp:website ?website . }
+
+      # Retrieve abstract (description)
+      OPTIONAL { ?tournament dbo:abstract ?abstract . FILTER(lang(?abstract) = "en") }
+
+      # Filter for exact match with tournament name
+      FILTER (
+        lang(?name) = "en" &&
+        (regex(LCASE(str(?name)), "^${escapedTournamentName.toLowerCase()}$", "i"))
+      )
+    }
+    GROUP BY ?name ?game ?motto ?website ?abstract
+  `;
+
+  const params = { query: sparqlQuery, format: "json" };
+
+  try {
+    const response = await axios.get(sparqlEndpoint, { params });
+    const result = response.data.results.bindings[0];
+
+    if (!result) {
+      throw new Error(`No data found for tournament: ${tournamentName}`);
+    }
+
+    return {
+      name: result.name?.value || "Unknown Tournament",
+      game: result.game?.value || "Unknown Game",
+      mostChamps: result.mostChamps?.value.split(", ") || [],
+      mostSuccessfulClubs: result.mostSuccessfulClubs?.value.split(", ") || [],
+      oldestFoundingYear: result.oldestFoundingYear?.value || "Unknown",
+      venues: result.venues?.value.split(", ") || [],
+      motto: result.motto?.value || "No motto available.",
+      domesticCups: result.domesticCups?.value.split(", ") || [],
+      relatedComps: result.relatedComps?.value.split(", ") || [],
+      reverseRelatedComps: result.reverseRelatedComps?.value.split(", ") || [],
+      countries: result.countries?.value.split(", ") || [],
+      website: result.website?.value || "No website available.",
+      abstract: result.abstract?.value || "No description available.",
+    };
+  } catch (error) {
+    console.error(`Error fetching tournament details for "${tournamentName}":`, error);
+    return null;
+  }
+}
+
 
 
 
