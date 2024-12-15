@@ -37,7 +37,7 @@ const TournamentDetails = () => {
         <p><strong>Most Champions:</strong> {details.mostChamps.join(", ") || "N/A"}</p>
         <p><strong>Oldest Founding Year:</strong> {details.oldestFoundingYear}</p>
         <p><strong>Venues:</strong> {details.venues.join(", ") || "N/A"}</p>
-        <p><strong>Motto:</strong> {details.motto}</p>
+        <p><strong>Motto:</strong> {details.mottos.join(", ") || "N/A"}</p>
         <p><strong>Domestic Cups:</strong> {details.domesticCups.join(", ") || "N/A"}</p>
         <p><strong>Related Competitions:</strong> {details.relatedComps.join(", ") || "N/A"}</p>
         <p><strong>Countries:</strong> {details.countries.join(", ") || "N/A"}</p>

@@ -525,8 +525,8 @@ export async function queryTournamentDetailsByName(tournamentName) {
            (GROUP_CONCAT(DISTINCT COALESCE(?mostChampLabel, STR(?mostChamp)); SEPARATOR=", ") AS ?mostChamps)
            (GROUP_CONCAT(DISTINCT COALESCE(?mostSuccessfulClubLabel, STR(?mostSuccessfulClub)); SEPARATOR=", ") AS ?mostSuccessfulClubs)
            (MIN(?foundingYear) AS ?oldestFoundingYear)
-           (GROUP_CONCAT(DISTINCT ?venue; SEPARATOR=", ") AS ?venues)
-           ?motto 
+           (GROUP_CONCAT(DISTINCT COALESCE(?venueLabel, STR(?venue)); SEPARATOR=", ") AS ?venues)
+           (GROUP_CONCAT(DISTINCT ?validMotto; SEPARATOR=", ") AS ?mottos)
            (GROUP_CONCAT(DISTINCT COALESCE(?domesticCupLabel, STR(?domesticCup)); SEPARATOR=", ") AS ?domesticCups)
            (GROUP_CONCAT(DISTINCT COALESCE(?relatedCompLabel, STR(?relatedComp)); SEPARATOR=", ") AS ?relatedComps)
            (GROUP_CONCAT(DISTINCT COALESCE(?reverseRelatedCompLabel, STR(?reverseRelatedComp)); SEPARATOR=", ") AS ?reverseRelatedComps)
@@ -557,16 +557,26 @@ export async function queryTournamentDetailsByName(tournamentName) {
         }
       }
 
-      # Retrieve founding year (oldest if multiple exist)
+      # Retrieve founding year
       OPTIONAL { ?tournament dbo:foundingYear ?foundingYear . }
 
       # Retrieve venues
-      OPTIONAL { ?tournament dbp:venue ?venue . }
+      OPTIONAL { 
+        ?tournament dbp:venue ?venue .
+        OPTIONAL { 
+          ?venue rdfs:label ?venueLabel .
+          FILTER(lang(?venueLabel) = "en")
+        }
+      }
 
-      # Retrieve motto
-      OPTIONAL { ?tournament dbp:motto ?motto . }
+      # Retrieve mottos ensuring non-empty values
+      OPTIONAL { 
+        ?tournament dbp:motto ?motto .
+        FILTER(BOUND(?motto) && STRLEN(?motto) > 0)
+        BIND(?motto AS ?validMotto)
+      }
 
-      # Handle domestic cups with labels
+      # Handle domestic cups
       OPTIONAL { 
         ?tournament dbp:domesticCup ?domesticCup .
         OPTIONAL { 
@@ -599,16 +609,15 @@ export async function queryTournamentDetailsByName(tournamentName) {
       # Retrieve website
       OPTIONAL { ?tournament dbp:website ?website . }
 
-      # Retrieve abstract (description)
+      # Retrieve abstract
       OPTIONAL { ?tournament dbo:abstract ?abstract . FILTER(lang(?abstract) = "en") }
 
-      # Filter for exact match with tournament name
       FILTER (
         lang(?name) = "en" &&
         (regex(LCASE(str(?name)), "^${escapedTournamentName.toLowerCase()}$", "i"))
       )
     }
-    GROUP BY ?name ?game ?motto ?website ?abstract
+    GROUP BY ?name ?game ?website ?abstract
   `;
 
   const params = { query: sparqlQuery, format: "json" };
@@ -628,7 +637,7 @@ export async function queryTournamentDetailsByName(tournamentName) {
       mostSuccessfulClubs: result.mostSuccessfulClubs?.value.split(", ") || [],
       oldestFoundingYear: result.oldestFoundingYear?.value || "Unknown",
       venues: result.venues?.value.split(", ") || [],
-      motto: result.motto?.value || "No motto available.",
+      mottos: result.mottos?.value.split(", ") || [], // Handle multiple mottos
       domesticCups: result.domesticCups?.value.split(", ") || [],
       relatedComps: result.relatedComps?.value.split(", ") || [],
       reverseRelatedComps: result.reverseRelatedComps?.value.split(", ") || [],
@@ -641,7 +650,5 @@ export async function queryTournamentDetailsByName(tournamentName) {
     return null;
   }
 }
-
-
 
 
