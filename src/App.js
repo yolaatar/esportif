@@ -9,6 +9,7 @@ import GameDetails from "./pages/GameDetails";
 import Tournement from "./pages/Tournement";
 import TournamentDetails from "./pages/TournamentDetails";
 import Teams from "./pages/Teams.js";
+import TeamDetails from "./pages/TeamDetails.js";
 
 const App = () => {
 	return (
@@ -38,6 +39,7 @@ const App = () => {
 						<Route path="/tournement" element={<Tournement />} />
 						<Route path="/tournament/:tournamentName" element={<TournamentDetails />} />
 						<Route path="/teams" element={<Teams />} />
+						<Route path="/team/:teamName" element={<TeamDetails />} />
 					</Routes>
 				</main>
 

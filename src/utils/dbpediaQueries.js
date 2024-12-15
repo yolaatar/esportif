@@ -659,4 +659,59 @@ export async function queryTournamentDetailsByName(tournamentName) {
   }
 }
 
+export async function queryTeamDetailsByName(teamName) {
+  const sparqlEndpoint = "https://dbpedia.org/sparql";
+  const escapedTeamName = teamName.replace(/"/g, '\\"'); // Escape quotes for SPARQL
+
+  const sparqlQuery = `
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+    PREFIX dbp: <http://dbpedia.org/property/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+    SELECT ?name 
+           (GROUP_CONCAT(DISTINCT ?game; SEPARATOR=", ") AS ?games)
+           (GROUP_CONCAT(DISTINCT ?location; SEPARATOR=", ") AS ?locations)
+           (GROUP_CONCAT(DISTINCT ?championship; SEPARATOR=", ") AS ?championships)
+           (GROUP_CONCAT(DISTINCT ?country; SEPARATOR=", ") AS ?countries)
+           ?website ?abstract
+    WHERE {
+      ?team rdfs:label ?name .
+      
+      # Filters exact match for team name
+      FILTER (lang(?name) = "en" && regex(LCASE(?name), "^${escapedTeamName.toLowerCase()}$", "i"))
+
+      # Retrieve games, locations, and championships
+      OPTIONAL { ?team dbp:game ?game . }
+      OPTIONAL { ?team dbo:location ?location . }
+      OPTIONAL { ?team dbp:championships ?championship . }
+      OPTIONAL { ?team dbp:country ?country . }
+      OPTIONAL { ?team dbp:website ?website . }
+      OPTIONAL { ?team dbo:abstract ?abstract . FILTER(lang(?abstract) = "en") }
+    }
+    GROUP BY ?name ?website ?abstract
+  `;
+
+  const params = { query: sparqlQuery, format: "json" };
+
+  try {
+    const response = await axios.get(sparqlEndpoint, { params });
+    const result = response.data.results.bindings[0];
+
+    if (!result) throw new Error(`No data found for team: ${teamName}`);
+
+    return {
+      name: result.name?.value || "Unknown Team",
+      games: result.games?.value.split(", ") || [],
+      locations: result.locations?.value.split(", ") || [],
+      championships: result.championships?.value.split(", ") || [],
+      countries: result.countries?.value.split(", ") || [],
+      website: result.website?.value || "No website available",
+      abstract: result.abstract?.value || "No description available",
+    };
+  } catch (error) {
+    console.error(`Error fetching team details for "${teamName}":`, error);
+    return null;
+  }
+}
 
