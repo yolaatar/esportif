@@ -265,7 +265,7 @@ export async function queryPopularTeams() {
           SELECT ?name (SAMPLE(?team) AS ?team) (SAMPLE(?logo) AS ?logo) (SAMPLE(?abstract) AS ?abstract)
                 (CASE 
                     WHEN STR(?name) = "T1 (esports)" THEN 1
-                    WHEN STR(?name) = "100 Thieves" THEN 2
+                    WHEN STR(?name) = "Bilibili Gaming" THEN 2
                     WHEN STR(?name) = "FaZe Clan" THEN 3
                     WHEN STR(?name) = "Samsung Galaxy (esports)" THEN 4
                     WHEN STR(?name) = "Shanghai Dragons" THEN 5
@@ -293,9 +293,7 @@ export async function queryPopularTeams() {
                 CONTAINS(LCASE(?name), "team") ||
                 CONTAINS(LCASE(?name), "gaming") ||
                 CONTAINS(LCASE(?name), "clan") ||
-                CONTAINS(LCASE(?name), "thieves") ||
                 CONTAINS(LCASE(?name), "dragons")
-                
               )
             )
           }
@@ -303,8 +301,7 @@ export async function queryPopularTeams() {
         }
       }
       ORDER BY ?priority DESC(strlen(STR(?abstract)))
-      LIMIT 12
-
+      LIMIT 9
     `;
 
   const params = { query: sparqlQuery, format: "json" };
@@ -661,7 +658,7 @@ export async function queryTournamentDetailsByName(tournamentName) {
 
 export async function queryTeamDetailsByName(teamName) {
   const sparqlEndpoint = "https://dbpedia.org/sparql";
-  const escapedTeamName = teamName.replace(/"/g, '\\"'); // Escape quotes for SPARQL
+  const escapedTeamName = teamName.replace(/"/g, '\\"').toLowerCase(); // Escape quotes and convert to lowercase for matching
 
   const sparqlQuery = `
     PREFIX dct: <http://purl.org/dc/terms/>
@@ -670,26 +667,80 @@ export async function queryTeamDetailsByName(teamName) {
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
     SELECT ?name 
-           (GROUP_CONCAT(DISTINCT ?game; SEPARATOR=", ") AS ?games)
-           (GROUP_CONCAT(DISTINCT ?location; SEPARATOR=", ") AS ?locations)
-           (GROUP_CONCAT(DISTINCT ?championship; SEPARATOR=", ") AS ?championships)
-           (GROUP_CONCAT(DISTINCT ?country; SEPARATOR=", ") AS ?countries)
-           ?website ?abstract
+           (SAMPLE(?abstract) AS ?abstractValue)
+           (COALESCE(MIN(?founded), MIN(?foundingDate), MIN(?foundingYear)) AS ?foundingYear)
+           (GROUP_CONCAT(DISTINCT COALESCE(?locationLabel, STR(?location)); SEPARATOR=", ") AS ?locations)
+           (GROUP_CONCAT(DISTINCT COALESCE(?dbpGamesLabel, COALESCE(?dbpGameLabel, COALESCE(?dboSportLabel, ?dbpSportLabel))); SEPARATOR=", ") AS ?games)
+           (GROUP_CONCAT(DISTINCT ?ceo; SEPARATOR=", ") AS ?ceos)
+           (GROUP_CONCAT(DISTINCT COALESCE(?playerLabel, STR(?player)); SEPARATOR=", ") AS ?players)
+           (GROUP_CONCAT(DISTINCT COALESCE(?teamOfLabel, STR(?teamOf)); SEPARATOR=", ") AS ?teamOfs)
     WHERE {
-      ?team rdfs:label ?name .
-      
-      # Filters exact match for team name
-      FILTER (lang(?name) = "en" && regex(LCASE(?name), "^${escapedTeamName.toLowerCase()}$", "i"))
+      ?team rdfs:label ?name ;
+            dct:subject ?category .
 
-      # Retrieve games, locations, and championships
-      OPTIONAL { ?team dbp:game ?game . }
-      OPTIONAL { ?team dbo:location ?location . }
-      OPTIONAL { ?team dbp:championships ?championship . }
-      OPTIONAL { ?team dbp:country ?country . }
-      OPTIONAL { ?team dbp:website ?website . }
+      # Restrict to specific categories
+      VALUES ?category {
+        <http://dbpedia.org/resource/Category:Esports_teams_based_in_South_Korea>
+        <http://dbpedia.org/resource/Category:Esports_teams_based_in_the_United_States>
+        <http://dbpedia.org/resource/Category:Esports_teams_based_in_China>
+      }
+
+      # Match names starting with 'teamName'
+      FILTER (lang(?name) = "en" && STRSTARTS(LCASE(?name), "${escapedTeamName}"))
+
+      # Retrieve abstract
       OPTIONAL { ?team dbo:abstract ?abstract . FILTER(lang(?abstract) = "en") }
+
+      # Retrieve founding year: dbp:founded > dbo:foundingDate > dbo:foundingYear
+      OPTIONAL { ?team dbp:founded ?founded . }
+      OPTIONAL { ?team dbo:foundingDate ?foundingDate . }
+      OPTIONAL { ?team dbo:foundingYear ?foundingYear . }
+
+      # Retrieve locations and labels
+      OPTIONAL { 
+        ?team dbp:location ?location .
+        OPTIONAL { ?location rdfs:label ?locationLabel . FILTER(lang(?locationLabel) = "en") }
+      }
+
+      # Retrieve games: priority dbp:games > dbp:game > dbo:sport > dbp:sport
+      OPTIONAL { 
+        ?team dbp:games ?dbpGames .
+        FILTER(STRLEN(STR(?dbpGames)) > 0)
+        OPTIONAL { ?dbpGames rdfs:label ?dbpGamesLabel . FILTER(lang(?dbpGamesLabel) = "en") }
+      }
+      OPTIONAL { 
+        ?team dbp:game ?dbpGame .
+        FILTER(STRLEN(STR(?dbpGame)) > 0)
+        OPTIONAL { ?dbpGame rdfs:label ?dbpGameLabel . FILTER(lang(?dbpGameLabel) = "en") }
+      }
+      OPTIONAL { 
+        ?team dbo:sport ?dboSport .
+        FILTER(STRLEN(STR(?dboSport)) > 0)
+        OPTIONAL { ?dboSport rdfs:label ?dboSportLabel . FILTER(lang(?dboSportLabel) = "en") }
+      }
+      OPTIONAL { 
+        ?team dbp:sport ?dbpSport .
+        FILTER(STRLEN(STR(?dbpSport)) > 0)
+        OPTIONAL { ?dbpSport rdfs:label ?dbpSportLabel . FILTER(lang(?dbpSportLabel) = "en") }
+      }
+
+      # Retrieve CEO
+      OPTIONAL { ?team dbp:ceo ?ceo . }
+
+      # Retrieve players from dbp:handle: restrict to strings
+      OPTIONAL {
+        ?team dbp:handle ?player .
+        FILTER(DATATYPE(?player) = xsd:string || ISLITERAL(?player))
+        OPTIONAL { ?player rdfs:label ?playerLabel . FILTER(lang(?playerLabel) = "en") }
+      }
+
+      # Retrieve "is dbp:team of"
+      OPTIONAL {
+        ?teamOf dbp:team ?team .
+        OPTIONAL { ?teamOf rdfs:label ?teamOfLabel . FILTER(lang(?teamOfLabel) = "en") }
+      }
     }
-    GROUP BY ?name ?website ?abstract
+    GROUP BY ?name
   `;
 
   const params = { query: sparqlQuery, format: "json" };
@@ -698,20 +749,28 @@ export async function queryTeamDetailsByName(teamName) {
     const response = await axios.get(sparqlEndpoint, { params });
     const result = response.data.results.bindings[0];
 
-    if (!result) throw new Error(`No data found for team: ${teamName}`);
+    if (!result) {
+      throw new Error(`No data found for team: ${teamName}`);
+    }
+
+    // Merge players and teamOfs into notablePlayers and deduplicate
+    const notablePlayers = [
+      ...(result.players?.value.split(", ") || []),
+      ...(result.teamOfs?.value.split(", ") || []),
+    ];
+    const uniqueNotablePlayers = [...new Set(notablePlayers)];
 
     return {
       name: result.name?.value || "Unknown Team",
-      games: result.games?.value.split(", ") || [],
+      abstract: result.abstractValue?.value || "No description available.",
+      foundingYear: result.foundingYear?.value || "Unknown",
       locations: result.locations?.value.split(", ") || [],
-      championships: result.championships?.value.split(", ") || [],
-      countries: result.countries?.value.split(", ") || [],
-      website: result.website?.value || "No website available",
-      abstract: result.abstract?.value || "No description available",
+      games: result.games?.value.split(", ") || [],
+      ceos: result.ceos?.value.split(", ") || [],
+      notablePlayers: uniqueNotablePlayers,
     };
   } catch (error) {
     console.error(`Error fetching team details for "${teamName}":`, error);
     return null;
   }
 }
-
