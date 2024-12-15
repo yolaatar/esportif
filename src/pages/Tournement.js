@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { queryTournaments } from "../utils/dbpediaQueries";
-import Layout from "./Layout";
+import LayoutGrid from "./LayoutGrid";
 
 const Tournement = () => {
 	const [tournaments, setTournaments] = useState([]);
@@ -24,7 +24,7 @@ const Tournement = () => {
 	}, []);
 
 	return (
-		<Layout
+		<LayoutGrid
 			title="eSport Tournaments"
 			data={tournaments}
 			loading={loading}

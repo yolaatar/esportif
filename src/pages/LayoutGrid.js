@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ClipLoader } from "react-spinners";
 
-const Layout = ({ title, data, loading, error, onClick }) => {
+const LayoutGrid = ({ title, data, loading, error, onClick }) => {
 	if (loading)
 		return (
 			<div className="flex justify-center items-center min-h-[80vh]">
@@ -48,4 +48,4 @@ const Layout = ({ title, data, loading, error, onClick }) => {
 	);
 };
 
-export default Layout;
+export default LayoutGrid;
