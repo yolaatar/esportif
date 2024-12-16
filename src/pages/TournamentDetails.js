@@ -1,57 +1,113 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { queryTournamentDetailsByName } from "../utils/dbpediaQueries";
+import { ClipLoader } from "react-spinners";
 
 const TournamentDetails = () => {
-  const { tournamentName } = useParams(); // Get tournament name from URL params
-  const [details, setDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+	const { tournamentName } = useParams();
+	const [details, setDetails] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        setLoading(true);
-        const result = await queryTournamentDetailsByName(tournamentName);
-        setDetails(result);
-      } catch (err) {
-        setError("Failed to fetch tournament details.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+	useEffect(() => {
+		const fetchDetails = async () => {
+			try {
+				setLoading(true);
+				const result = await queryTournamentDetailsByName(
+					decodeURIComponent(tournamentName)
+				);
+				setDetails(result);
+			} catch (err) {
+				setError("Error fetching tournament details.");
+			} finally {
+				setLoading(false);
+			}
+		};
 
-    fetchDetails();
-  }, [tournamentName]);
+		fetchDetails();
+	}, [tournamentName]);
 
-  if (loading) return <p className="text-white text-center">Loading...</p>;
-  if (error) return <p className="text-red-500 text-center">{error}</p>;
-  if (!details) return <p className="text-gray-400 text-center">No details available.</p>;
+	if (loading)
+		return (
+			<div className="flex justify-center items-center min-h-[80vh]">
+				<ClipLoader color="#ffffff" size={50} />
+			</div>
+		);
 
-  return (
-    <div className="flex flex-col items-center justify-center p-8 min-h-screen">
-      <h2 className="text-4xl font-bold text-white mb-6">{details.name}</h2>
-      <div className="bg-gray-800 rounded-lg p-6 text-white shadow-lg w-full max-w-3xl">
-        <p><strong>Game:</strong> {details.game}</p>
-        <p><strong>Most Champions:</strong> {details.mostChamps.join(", ") || "N/A"}</p>
-        <p><strong>Oldest Founding Year:</strong> {details.oldestFoundingYear}</p>
-        <p><strong>Venues:</strong> {details.venues.join(", ") || "N/A"}</p>
-        <p><strong>Motto:</strong> {details.mottos.join(", ") || "N/A"}</p>
-        <p><strong>Domestic Cups:</strong> {details.domesticCups.join(", ") || "N/A"}</p>
-        <p><strong>Related Competitions:</strong> {details.relatedComps.join(", ") || "N/A"}</p>
-        <p><strong>Countries:</strong> {details.countries.join(", ") || "N/A"}</p>
-        <p><strong>Website:</strong> 
-          {details.website ? (
-            <a href={details.website} target="_blank" rel="noopener noreferrer" className="text-blue-400">
-              {details.website}
-            </a>
-          ) : " N/A"}
-        </p>
-        <p className="mt-4"><strong>Description:</strong> {details.abstract}</p>
-      </div>
-    </div>
-  );
+	if (error)
+		return <p className="text-center text-red-500 text-lg mt-10">{error}</p>;
+
+	if (!details)
+		return (
+			<p className="text-gray-400 text-center mt-10">No details available.</p>
+		);
+
+	return (
+		<div className="max-w-4xl mx-auto mt-5 mb-8 bg-gray-800 p-8 rounded-3xl shadow-lg text-white">
+			<h3 className="text-3xl font-bold text-yellow-400 text-center mb-6">
+				{details.name}
+			</h3>
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">Game:</strong>
+					<span>{details.game}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">
+						Most Champions:
+					</strong>
+					<span>{details.mostChamps.join(", ") || "N/A"}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">
+						Oldest Founding Year:
+					</strong>
+					<span>{details.oldestFoundingYear}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">Venues:</strong>
+					<span>{details.venues.join(", ") || "N/A"}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">Motto:</strong>
+					<span>{details.mottos.join(", ") || "N/A"}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">Domestic Cups:</strong>
+					<span>{details.domesticCups.join(", ") || "N/A"}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">
+						Related Competitions:
+					</strong>
+					<span>{details.relatedComps.join(", ") || "N/A"}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
+					<strong className="block text-yellow-400 mb-1">Countries:</strong>
+					<span>{details.countries.join(", ") || "N/A"}</span>
+				</div>
+				<div className="bg-gray-700 py-4 px-6 rounded-3xl col-span-1 md:col-span-2">
+					<strong className="block text-yellow-400 mb-1">Website:</strong>
+					{details.website ? (
+						<a
+							href={details.website}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-blue-400 hover:underline"
+						>
+							{details.website}
+						</a>
+					) : (
+						"N/A"
+					)}
+				</div>
+			</div>
+			<p className="bg-gray-700 py-4 px-6 rounded-3xl leading-relaxed">
+				<strong className="block text-yellow-400 mb-1">Description:</strong>
+				{details.abstract}
+			</p>
+		</div>
+	);
 };
 
 export default TournamentDetails;

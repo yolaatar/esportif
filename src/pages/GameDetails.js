@@ -39,41 +39,41 @@ const GameDetails = () => {
 			{gameDetails && (
 				<>
 					<h3 className="text-3xl font-bold text-yellow-400 text-center mb-6">
-						{gameDetails.name}
+						{gameDetails.name || "N/A"}
 					</h3>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 						<div className="bg-gray-700 py-4 px-6 rounded-3xl">
 							<strong className="block text-yellow-400 mb-1">
 								Release Date :
 							</strong>
-							<span>{gameDetails.releaseDate}</span>
+							<span>{gameDetails.releaseDate || "N/A"}</span>
 						</div>
 						<div className="bg-gray-700 py-4 px-6 rounded-3xl">
 							<strong className="block text-yellow-400 mb-1">Editors :</strong>
-							<span>{gameDetails.publishers.join(", ")}</span>
+							<span>{gameDetails.publishers.join(", ") || "N/A"}</span>
 						</div>
 						<div className="bg-gray-700 py-4 px-6 rounded-3xl">
 							<strong className="block text-yellow-400 mb-1">
 								Developers :
 							</strong>
-							<span>{gameDetails.developers.join(", ")}</span>
+							<span>{gameDetails.developers.join(", ") || "N/A"}</span>
 						</div>
 						<div className="bg-gray-700 py-4 px-6 rounded-3xl">
 							<strong className="block text-yellow-400 mb-1">Type :</strong>
-							<span>{gameDetails.genres.join(", ")}</span>
+							<span>{gameDetails.genres.join(", ") || "N/A"}</span>
 						</div>
 						<div className="bg-gray-700 py-4 px-6 rounded-3xl col-span-1 md:col-span-2">
 							<strong className="block text-yellow-400 mb-1">
-								Plateforms :
+								Platforms :
 							</strong>
-							<span>{gameDetails.platforms.join(", ")}</span>
+							<span>{gameDetails.platforms.join(", ") || "N/A"}</span>
 						</div>
 					</div>
 					<p className="bg-gray-700 py-4 px-6 rounded-3xl leading-relaxed">
 						<strong className="block text-yellow-400 mb-1">
 							Description :
 						</strong>
-						{gameDetails.abstract}
+						{gameDetails.abstract || "N/A"}
 					</p>
 				</>
 			)}
