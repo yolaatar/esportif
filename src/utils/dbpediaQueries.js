@@ -760,8 +760,10 @@ export async function queryTeamDetailsByName(teamName) {
     ];
     const uniqueNotablePlayers = [...new Set(notablePlayers)];
 
+    const cleanTeamName = (name) => name.replace(/\s*\(.*?\)$/, "").trim();
+
     return {
-      name: result.name?.value || "Unknown Team",
+      name: cleanTeamName(result.name?.value) || "Unknown Team",
       abstract: result.abstractValue?.value || "No description available.",
       foundingYear: result.foundingYear?.value || "Unknown",
       locations: result.locations?.value.split(", ") || [],
