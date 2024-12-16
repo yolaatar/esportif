@@ -75,7 +75,7 @@ const Home = () => {
 		<div className="container mx-15 p-4">
 			<div
 				className={`${
-					isSticky ? "sticky top-10 z-50 bg-gray-900" : "mt-4"
+					isSticky ? "sticky top-4 z-50 bg-gray-900" : "mt-4"
 				} flex items-center w-full max-w-lg mx-auto bg-gray-800 shadow-md rounded-full p-2 transition-transform duration-300 hover:scale-105 hover:shadow-2xl`}
 			>
 				<form onSubmit={handleSearch} className="flex w-full">
@@ -91,7 +91,7 @@ const Home = () => {
 					/>
 					<button
 						type="submit"
-						className="bg-indigo-400 text-gray-900 px-6 py-3 rounded-full hover:bg-yellow-600 transition-colors duration-300"
+						className="bg-indigo-400 hover:bg-indigo-600 text-gray-900 px-6 py-3 rounded-full transition-colors duration-300"
 					>
 						Search
 					</button>
@@ -99,14 +99,16 @@ const Home = () => {
 			</div>
 
 			<div className="mt-6">
-				{loading && <p className="text-center text-white">Loading results...</p>}
+				{loading && (
+					<p className="text-center text-white">Loading results...</p>
+				)}
 				{error && <p className="text-center text-red-500">{error}</p>}
 				{results.length > 0 && (
 					<div className="grid grid-cols-1 gap-4 mb-4">
 						{results.map((result, index) => (
 							<div
 								key={index}
-								className="flex items-start p-4 bg-gray-800 rounded-3xl shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+								className="flex items-start p-10 bg-gray-800 rounded-3xl shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
 							>
 								{result.thumbnail && (
 									<img
@@ -119,7 +121,9 @@ const Home = () => {
 									<h3 className="text-lg font-bold text-blue-400">
 										{result.label}
 									</h3>
-									<p className="text-gray-300">{result.abstract}</p>
+									<div className="bg-gray-800 text-gray-300">
+										{result.abstract}
+									</div>
 								</div>
 							</div>
 						))}
