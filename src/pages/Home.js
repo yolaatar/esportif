@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 import axios from "axios";
-import { a } from "framer-motion/client";
 
 const Home = () => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [results, setResults] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
-	const [searched, setSearched] = useState(false); // Nouvel état pour suivre si une recherche a été faite
+	const [searched, setSearched] = useState(false);
+	const [isSticky, setIsSticky] = useState(false);
+
+	// Handle scroll to make the search bar sticky
+	useEffect(() => {
+		const handleScroll = () => {
+			setIsSticky(window.scrollY > 50);
+		};
+		window.addEventListener("scroll", handleScroll);
+		return () => window.removeEventListener("scroll", handleScroll);
+	}, []);
 
 	const handleSearch = async (e) => {
 		e.preventDefault();
@@ -20,7 +29,7 @@ const Home = () => {
 		setLoading(true);
 		setError(null);
 		setResults([]);
-		setSearched(true); // Marque qu'une recherche a été effectuée
+		setSearched(true);
 
 		const sparqlEndpoint = "https://dbpedia.org/sparql";
 		const sparqlQuery = `
@@ -63,49 +72,54 @@ const Home = () => {
 	};
 
 	return (
-		<div className="container mx-auto p-4">
-			<form
-				onSubmit={handleSearch}
-				className="flex items-center w-full max-w-lg mx-auto bg-white shadow-md rounded-full p-2 mt-4 transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+		<div className="container mx-15 p-4">
+			<div
+				className={`${
+					isSticky ? "sticky top-10 z-50 bg-gray-900" : "mt-4"
+				} flex items-center w-full max-w-lg mx-auto bg-gray-800 shadow-md rounded-full p-2 transition-transform duration-300 hover:scale-105 hover:shadow-2xl`}
 			>
-				<div className="flex items-center px-4">
-					<FaSearch className="text-gray-400" />
-				</div>
-				<input
-					type="text"
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-					placeholder="Search for teams, games or players..."
-					className="flex-1 px-2 py-2 text-gray-700 focus:outline-none rounded-l-full"
-				/>
-				<button
-					type="submit"
-					className="bg-blue-900 text-white px-6 py-3 rounded-full hover:bg-blue-950 transition-colors duration-300"
-				>
-					Search
-				</button>
-			</form>
+				<form onSubmit={handleSearch} className="flex w-full">
+					<div className="flex items-center px-4">
+						<FaSearch className="text-gray-400" />
+					</div>
+					<input
+						type="text"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						placeholder="Search for teams, games or players..."
+						className="flex-1 px-2 py-2 text-white bg-transparent focus:outline-none rounded-l-full"
+					/>
+					<button
+						type="submit"
+						className="bg-indigo-400 text-gray-900 px-6 py-3 rounded-full hover:bg-yellow-600 transition-colors duration-300"
+					>
+						Search
+					</button>
+				</form>
+			</div>
 
 			<div className="mt-6">
-				{loading && <p>Results are loading...</p>}
-				{error && <p className="text-red-500">{error}</p>}
+				{loading && <p className="text-center text-white">Loading results...</p>}
+				{error && <p className="text-center text-red-500">{error}</p>}
 				{results.length > 0 && (
 					<div className="grid grid-cols-1 gap-4 mb-4">
 						{results.map((result, index) => (
 							<div
 								key={index}
-								className="flex items-start p-10 bg-gray-200 rounded-3xl shadow-md"
+								className="flex items-start p-4 bg-gray-800 rounded-3xl shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
 							>
 								{result.thumbnail && (
 									<img
 										src={result.thumbnail}
 										alt={result.label}
-										className="w-16 h-16 rounded-md"
+										className="w-16 h-16 rounded-lg mr-4"
 									/>
 								)}
-								<div className="px-4">
-									<h3 className="text-lg font-bold">{result.label}</h3>
-									<p className="text-gray-600">{result.abstract}</p>
+								<div>
+									<h3 className="text-lg font-bold text-blue-400">
+										{result.label}
+									</h3>
+									<p className="text-gray-300">{result.abstract}</p>
 								</div>
 							</div>
 						))}
