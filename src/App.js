@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -10,14 +10,35 @@ import Tournement from "./pages/Tournement";
 import TournamentDetails from "./pages/TournamentDetails";
 import Teams from "./pages/Teams.js";
 import TeamDetails from "./pages/TeamDetails.js";
+import { queryGames } from "./utils/dbpediaQueries";
 
 const App = () => {
+	const [games, setGames] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+
+	useEffect(() => {
+		const fetchGames = async () => {
+			try {
+				setLoading(true);
+				const data = await queryGames();
+				setGames(data);
+			} catch (err) {
+				setError("Failed to fetch games.");
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchGames();
+	}, []);
+
 	return (
 		<Router>
 			<div className="min-h-screen flex flex-col relative">
 				{/* Image de fond globale */}
 				<img
-					src="/esport-bg.jpg" // Assurez-vous que l'image est dans public/
+					src="/esport-bg.jpg"
 					alt="Fond e-Sport"
 					className="absolute inset-0 w-full h-full object-cover -z-10"
 				/>
@@ -34,14 +55,20 @@ const App = () => {
 						<Route path="/" element={<Home />} />
 						<Route path="/about" element={<About />} />
 						<Route path="/games" element={<Games />} />
-						<Route path="/game/:name" element={<GameDetails />} />
-						<Route path="/tournement" element={<Tournement />} />
+						<Route
+							path="/game/:name"
+							element={<GameDetails />}
+						/>
+						<Route
+							path="/tournement"
+							element={<Tournement games={games} />}
+						/>
 						<Route
 							path="/tournament/:tournamentName"
 							element={<TournamentDetails />}
 						/>
 						<Route path="/teams" element={<Teams />} />
-						<Route path="/team/:teamName" element={<TeamDetails />} />
+						<Route path="/team/:teamName" element={<TeamDetails games={games} />} />
 					</Routes>
 				</main>
 

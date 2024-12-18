@@ -27,7 +27,8 @@ const Games = () => {
 
 	const handleGameClick = (game) => {
 		if (game.name) {
-			navigate(`/game/${encodeURIComponent(game.name)}`); // Navigate to the game details page
+			// Pass games along with the navigation
+			navigate(`/game/${encodeURIComponent(game.name)}`, { state: { games } });
 		} else {
 			console.error("Game name is undefined");
 		}

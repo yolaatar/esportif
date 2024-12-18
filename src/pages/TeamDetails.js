@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { queryTeamDetailsByName } from "../utils/dbpediaQueries";
 import { ClipLoader } from "react-spinners";
 
-const TeamDetails = () => {
+const TeamDetails = ({ games }) => {
 	const { teamName } = useParams();
+	const navigate = useNavigate();
 	const [teamDetails, setTeamDetails] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
@@ -27,6 +28,32 @@ const TeamDetails = () => {
 		fetchDetails();
 	}, [teamName]);
 
+	// Fonction pour surligner les jeux disponibles
+	const highlightGames = (text) => {
+		if (!text || games.length === 0) return text;
+
+		let highlightedText = text;
+
+		// Vérifie si chaque jeu dans "games" est présent dans le texte
+		games.forEach((game) => {
+			const regex = new RegExp(`\\b${game.name}\\b`, "gi");
+			highlightedText = highlightedText.replace(
+				regex,
+				`<span class="text-blue-400 cursor-pointer underline" data-name="${game.name}">${game.name}</span>`
+			);
+		});
+
+		return highlightedText;
+	};
+
+	// Gestion du clic sur un jeu surligné
+	const handleGameClick = (e) => {
+		if (e.target.dataset.name) {
+			const gameName = e.target.dataset.name;
+			navigate(`/game/${encodeURIComponent(gameName)}`);
+		}
+	};
+
 	if (loading)
 		return (
 			<div className="flex justify-center items-center min-h-[80vh]">
@@ -47,13 +74,16 @@ const TeamDetails = () => {
 		abstract,
 		foundingYear,
 		locations,
-		games,
+		games: teamGames,
 		ceos,
 		notablePlayers,
 	} = teamDetails;
 
 	return (
-		<div className="max-w-4xl mx-auto mt-5 mb-8 bg-gray-800 p-8 rounded-3xl shadow-lg text-white">
+		<div
+			className="max-w-4xl mx-auto mt-5 mb-8 bg-gray-800 p-8 rounded-3xl shadow-lg text-white"
+			onClick={handleGameClick}
+		>
 			<h3 className="text-3xl font-bold text-yellow-400 text-center mb-6">
 				{name}
 			</h3>
@@ -68,7 +98,7 @@ const TeamDetails = () => {
 				</div>
 				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
 					<strong className="block text-yellow-400 mb-1">Games:</strong>
-					<span>{games.join(", ") || "N/A"}</span>
+					<span>{teamGames.join(", ") || "N/A"}</span>
 				</div>
 				<div className="bg-gray-700 py-4 px-6 rounded-3xl">
 					<strong className="block text-yellow-400 mb-1">CEOs:</strong>
@@ -81,10 +111,12 @@ const TeamDetails = () => {
 					<span>{notablePlayers.join(", ") || "N/A"}</span>
 				</div>
 			</div>
-			<p className="bg-gray-700 py-4 px-6 rounded-3xl leading-relaxed">
-				<strong className="block text-yellow-400 mb-1">Description:</strong>
-				{abstract || "N/A"}
-			</p>
+			<p
+				className="bg-gray-700 py-4 px-6 rounded-3xl leading-relaxed"
+				dangerouslySetInnerHTML={{
+					__html: highlightGames(abstract || "N/A"),
+				}}
+			/>
 		</div>
 	);
 };
