@@ -18,6 +18,17 @@ const isRelevantImage = (imageUrl) => {
   );
 };
 
+// In-memory cache
+const cache = new Map();
+
+const getFromCache = (key) => {
+  return cache.has(key) ? cache.get(key) : null;
+};
+
+const saveToCache = (key, value) => {
+  cache.set(key, value);
+};
+
 
 
 const manualImageOverrides = {
@@ -39,8 +50,16 @@ const manualImageOverrides = {
 };
 
 async function fetchWikipediaImage(gameName) {
+
+  // Vérifie si l'image est en cache
+  const cachedImage = getFromCache(gameName);
+  if (cachedImage) {
+    return cachedImage;
+  }
+
   // Vérifie si le jeu a une image manuelle
   if (manualImageOverrides[gameName]) {
+    saveToCache(gameName, manualImageOverrides[gameName]);
     return manualImageOverrides[gameName];
   }
 
@@ -67,6 +86,7 @@ async function fetchWikipediaImage(gameName) {
         const imageUrl = page.thumbnail.source;
 
         if (isRelevantImage(imageUrl)) {
+          saveToCache(gameName, imageUrl); // Save to cache
           return imageUrl;
         }
       }
@@ -76,12 +96,14 @@ async function fetchWikipediaImage(gameName) {
         for (const image of page.images) {
           const imageUrl = await fetchFullImageUrl(image.title);
           if (imageUrl && isRelevantImage(imageUrl)) {
+            saveToCache(gameName, imageUrl); // Save to cache
             return imageUrl;
           }
         }
       }
     }
 
+    saveToCache(gameName, null); // Save to cache
     console.warn(`No relevant image found for ${gameName}`);
     return null;
   } catch (error) {
@@ -123,6 +145,13 @@ async function fetchFullImageUrl(imageTitle) {
 }
 
 export async function queryGames() {
+
+  const cacheKey = "queryGames";
+  const cachedResults = getFromCache(cacheKey);
+  if (cachedResults) {
+    return cachedResults;
+  }
+
   const sparqlEndpoint = "https://dbpedia.org/sparql";
   const sparqlQuery = `
     PREFIX dbo: <http://dbpedia.org/ontology/>
@@ -153,7 +182,7 @@ export async function queryGames() {
     const results = response.data.results.bindings;
 
     // Récupère les jeux et gère les logos manquants
-    return Promise.all(
+    const games = Promise.all(
       results.map(async (game) => {
         if (!game.name || !game.name.value) {
           return { name: "Unknown Game", logo: "https://via.placeholder.com/150" };
@@ -167,46 +196,54 @@ export async function queryGames() {
         return { name, logo };
       })
     );
+
+    saveToCache(cacheKey, games); // Save results to cache
+    return games;
   } catch (error) {
     console.error("Error fetching esports games:", error);
     return [];
   }
 }
 
-
 export async function queryTournaments() {
+  const cacheKey = "queryTournaments";
+  const cachedData = getFromCache(cacheKey);
+
+  // If data is already cached, return it
+  if (cachedData) {
+    console.log("Serving from cache");
+    return cachedData;
+  }
+
   const sparqlEndpoint = "https://dbpedia.org/sparql";
 
   const sparqlQuery = `
       PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbr: <http://dbpedia.org/resource/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX dbr: <http://dbpedia.org/resource/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?tournament ?name ?logo ?abstract
-WHERE {
-  dbr:List_of_esports_leagues_and_tournaments dbo:wikiPageWikiLink ?tournament .
-  ?tournament rdfs:label ?name .
-  ?tournament dbo:abstract ?abstract .
-  OPTIONAL { ?tournament dbo:thumbnail ?logo . }
-  FILTER (
-    lang(?name) = "en" && 
-    lang(?abstract) = "en" 
-  )
-  FILTER (
-    CONTAINS(LCASE(?name), "world cup") ||
-    CONTAINS(LCASE(?name), "championship") ||
-    CONTAINS(LCASE(?name), "cup") ||
-    CONTAINS(LCASE(?name), "champions") ||
-    CONTAINS(LCASE(?name), "tournament") ||
-    CONTAINS(LCASE(?name), "invitational") ||
-    CONTAINS(LCASE(?name), "league") 
-  )
-  
-}
-ORDER BY DESC(strlen(?abstract))
-LIMIT 20
-
-
+      SELECT ?tournament ?name ?logo ?abstract
+      WHERE {
+        dbr:List_of_esports_leagues_and_tournaments dbo:wikiPageWikiLink ?tournament .
+        ?tournament rdfs:label ?name .
+        ?tournament dbo:abstract ?abstract .
+        OPTIONAL { ?tournament dbo:thumbnail ?logo . }
+        FILTER (
+          lang(?name) = "en" && 
+          lang(?abstract) = "en" 
+        )
+        FILTER (
+          CONTAINS(LCASE(?name), "world cup") ||
+          CONTAINS(LCASE(?name), "championship") ||
+          CONTAINS(LCASE(?name), "cup") ||
+          CONTAINS(LCASE(?name), "champions") ||
+          CONTAINS(LCASE(?name), "tournament") ||
+          CONTAINS(LCASE(?name), "invitational") ||
+          CONTAINS(LCASE(?name), "league") 
+        )
+      }
+      ORDER BY DESC(strlen(?abstract))
+      LIMIT 20
     `;
 
   const params = { query: sparqlQuery, format: "json" };
@@ -225,15 +262,15 @@ LIMIT 20
       "professional gamers league",
       "2016 league of legends world championship",
       "rocket league championship series"
-
     ];
     
     const filteredResults = results.filter(
       (tournament) => !excludedTournaments.includes(tournament.name.value.toLowerCase())
     );
+
     const finalResults = filteredResults.slice(0, 9);
 
-    return Promise.all(
+    const formattedResults = await Promise.all(
       finalResults.map(async (tournament) => {
         if (!tournament.name || !tournament.name.value) {
           return { name: "Unknown Tournament", logo: "https://via.placeholder.com/150" };
@@ -244,14 +281,27 @@ LIMIT 20
         return { name, logo };
       })
     );
+
+    // Save results to cache
+    saveToCache(cacheKey, formattedResults);
+
+    return formattedResults;
   } catch (error) {
     console.error("Error fetching popular tournaments:", error);
     return [];
   }
 }
 
-
 export async function queryPopularTeams() {
+  const cacheKey = "queryPopularTeams";
+  const cachedData = getFromCache(cacheKey);
+
+  // Serve data from cache if available
+  if (cachedData) {
+    console.log("Serving teams from cache");
+    return cachedData;
+  }
+
   const sparqlEndpoint = "https://dbpedia.org/sparql";
 
   const sparqlQuery = `
@@ -312,7 +362,7 @@ export async function queryPopularTeams() {
     const response = await axios.get(sparqlEndpoint, { params });
     const results = response.data.results.bindings;
 
-    return Promise.all(
+    const formattedResults = await Promise.all(
       results.map(async (team) => {
         if (!team.name || !team.name.value) {
           return { name: "Unknown Team", logo: "https://via.placeholder.com/150" };
@@ -323,11 +373,18 @@ export async function queryPopularTeams() {
         return { name, logo };
       })
     );
+
+    // Save the results to the cache
+    saveToCache(cacheKey, formattedResults);
+
+    return formattedResults;
   } catch (error) {
     console.error("Error fetching popular teams:", error);
     return [];
   }
 }
+
+
 
 export async function queryGameDetails(gameURI) {
   const sparqlEndpoint = "https://dbpedia.org/sparql";
