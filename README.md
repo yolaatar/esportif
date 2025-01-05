@@ -1,70 +1,71 @@
-# Getting Started with Create React App
+# EsportIF
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Une application web front-end permettant d'explorer l'univers de l'esport grâce à des données issues du web sémantique. Développée avec React et alimentée par des requêtes SPARQL sur DBpedia.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Fonctionnalités
 
-### `npm start`
+## Fonctionnalités
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Navigation intuitive :** Parcourez les différentes sections principales : 
+  - **À propos** : Présentation du projet.
+  - **Jeux** : Découvrez les jeux vidéo les plus populaires dans l'esport.
+  - **Tournois** : Explorez les tournois emblématiques.
+  - **Équipes** : Apprenez-en davantage sur les équipes d'esport renommées.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Recherche rapide :** Une barre de recherche intégrée permet aux utilisateurs de rechercher des jeux, tournois ou équipes spécifiques. Les résultats sont filtrés en temps réel pour une expérience utilisateur fluide.
 
-### `npm test`
+- **Affichage dynamique des données :** 
+  - Les résultats des requêtes SPARQL sont affichés sous forme de listes ou de grilles pour une meilleure lisibilité.
+  - Données issues directement de DBpedia, mises à jour en temps réel.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Optimisation des images via cache :** 
+  - Un système de cache pour les images est utilisé afin de les charger une seule fois. 
+  - Les images sont ensuite stockées en cache, réduisant ainsi le temps de chargement lors des visites suivantes et améliorant l'expérience utilisateur.
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Suivez ces étapes pour installer et exécuter l'application localement :
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. **Pré-requis :**
+   - Avoir [Node.js](https://nodejs.org/) installé (version recommandée : 16 ou supérieure).
+   - React est nécessaire pour exécuter le projet. Si vous ne l'avez pas encore configuré, installez-le via Node.js.
 
-### `npm run eject`
+2. **Installer les dépendances :**
+   Naviguez dans le répertoire du projet et exécutez :
+   ```bash
+   npm install
+   ```
+3. **Lancer l'application :**
+   Une fois les dépendances installées, démarrez l'application avec :
+   ```bash
+   npm start
+   ```
+## Structure des fichiers
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+**App.js :**
+  Point d'entrée principal, coordonne la navigation entre les pages.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+**utils/dbpediaqueries.js :**
+  Contient toutes les requêtes SPARQL nécessaires pour interroger DBpedia.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+**pages/ :** Répertoire contenant les différentes pages (À propos, Jeux, Tournois, Équipes).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Technologies utilisées
+**React.js :**
+  Pour une interface utilisateur dynamique et modulable.
 
-## Learn More
+**Tailwind CSS :**
+  Gestion des styles réactifs.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+**SPARQL et DBpedia :**
+  Récupération des données sémantiques.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Axios :** 
+  Envoi des requêtes HTTP pour interroger l'endpoint SPARQL.
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Local Storage :** 
+  Utilisé pour le cache des images, garantissant des temps de chargement réduits.
