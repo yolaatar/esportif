@@ -6,8 +6,6 @@ Une application web front-end permettant d'explorer l'univers de l'esport grâce
 
 ## Fonctionnalités
 
-## Fonctionnalités
-
 - **Navigation intuitive :** Parcourez les différentes sections principales : 
   - **À propos** : Présentation du projet.
   - **Jeux** : Découvrez les jeux vidéo les plus populaires dans l'esport.
